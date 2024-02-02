@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"go-api/config"
 	_ "go-api/docs"
 	"go-api/router"
 )
@@ -18,10 +19,10 @@ import (
 // @BasePath /
 func main() {
 	app := fiber.New()
-
+	config.SetupLocalize(app)
 	router.SetupRoutes(app)
-
 	err := app.Listen(":8080")
+
 	if err != nil {
 		return
 	}

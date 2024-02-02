@@ -24,6 +24,17 @@ const docTemplate = `{
     "basePath": "{{.BasePath}}",
     "paths": {
         "/api/repositories": {
+            "get": {
+                "description": "List Repository",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "List Repository",
+                "responses": {}
+            },
             "post": {
                 "description": "Add Repository",
                 "consumes": [

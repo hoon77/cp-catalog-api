@@ -13,6 +13,14 @@ info:
   version: "1.0"
 paths:
   /api/repositories:
+    get:
+      consumes:
+      - application/json
+      description: List Repository
+      produces:
+      - application/json
+      responses: {}
+      summary: List Repository
     post:
       consumes:
       - application/json

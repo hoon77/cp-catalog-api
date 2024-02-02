@@ -14,9 +14,9 @@ func SetupRoutes(app *fiber.App) {
 	// helm repo
 	repositories := api.Group("/repositories")
 	{
-		// helm repo list
+		// helm repo add
 		repositories.Post("", handler.AddRepos)
-
+		repositories.Get("", handler.ListRepos)
 	}
 
 }

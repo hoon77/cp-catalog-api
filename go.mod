@@ -6,6 +6,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.0
 	github.com/gofiber/swagger v1.0.0
 	github.com/swaggo/swag v1.16.3
+	golang.org/x/text v0.14.0
 )
 
 require (
@@ -15,6 +16,7 @@ require (
 	github.com/go-openapi/jsonreference v0.20.4 // indirect
 	github.com/go-openapi/spec v0.20.14 // indirect
 	github.com/go-openapi/swag v0.22.9 // indirect
+	github.com/gofiber/contrib/fiberi18n/v2 v2.0.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.17.5 // indirect
@@ -29,5 +31,6 @@ require (
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
