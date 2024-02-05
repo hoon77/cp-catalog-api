@@ -2,10 +2,16 @@ package main
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"go-api/config"
 	_ "go-api/docs"
+	"go-api/middleware"
 	"go-api/router"
 )
+
+func init() {
+	config.InitEnvConfigs()
+}
 
 // @title Container Platform Helm Rest API
 // @version 1.0
@@ -19,11 +25,12 @@ import (
 // @BasePath /
 func main() {
 	app := fiber.New()
-	config.SetupLocalize(app)
-	router.SetupRoutes(app)
-	err := app.Listen(":8080")
-
+	middleware.FiberMiddleware(app)
+	middleware.SetupLocalize(app)
+	router.SwaggerRoute(app)
+	router.APIRoutes(app)
+	err := app.Listen(config.Env.ServerPort)
 	if err != nil {
-		return
+		log.Fatal("Server is not running! Reason: %v", err)
 	}
 }
