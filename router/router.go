@@ -18,7 +18,10 @@ func APIRoutes(app *fiber.App) {
 	// releases
 	releases := api.Group("/clusters/:clusterId/namespaces/:namespace/releases")
 	{
+		// helm list
 		releases.Get("", handler.ListReleases)
+		// helm get
+		releases.Get("/:release", handler.GetRelease)
 	}
 
 }
