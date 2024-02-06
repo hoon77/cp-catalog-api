@@ -29,6 +29,7 @@ func init() {
 // @host localhost:8080
 // @BasePath /
 func main() {
+	log.Info("Hello, World!")
 	app := fiber.New()
 	middleware.FiberMiddleware(app)
 	middleware.SetupLocalize(app)

@@ -3,6 +3,7 @@ package common
 import (
 	"github.com/gofiber/contrib/fiberi18n/v2"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 )
 
 type ResultStatus struct {
@@ -26,6 +27,7 @@ func RespOK(c *fiber.Ctx, data interface{}) error {
 }
 
 func RespErr(c *fiber.Ctx, err error) error {
+	log.Errorf("[Error Reason] : %s", err.Error())
 	resultStatus := ResultStatus{
 		ResultCode:     RESULT_STATUS_FAIL,
 		ResultMessage:  err.Error(),

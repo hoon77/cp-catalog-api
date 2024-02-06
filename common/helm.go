@@ -7,6 +7,7 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/cli"
 	"os"
+	"strings"
 )
 
 var (
@@ -21,10 +22,14 @@ type KubeInformation struct {
 }
 
 func InitKubeInformation(c *fiber.Ctx) *KubeInformation {
-	//apiserver, token 가져오기
+	namespace := c.Params("namespace")
+	if strings.ToLower(namespace) == ALL_NAMESPACE {
+		namespace = ""
+	}
+
 	return &KubeInformation{
 		AimCluster:   c.Params("clusterId"),
-		AimNamespace: c.Params("namespace"),
+		AimNamespace: namespace,
 		AimApiServer: config.Env.K8sApiServer,
 		AimToken:     config.Env.K8sToken,
 	}
