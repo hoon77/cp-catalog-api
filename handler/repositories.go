@@ -26,5 +26,5 @@ func AddRepos(c *fiber.Ctx) error {
 // @Produce json
 // @Router /api/repositories [Get]
 func ListRepos(c *fiber.Ctx) error {
-	return common.RespOK(c)
+	return common.RespOK(c, "")
 }

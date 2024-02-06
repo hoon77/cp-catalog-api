@@ -15,6 +15,8 @@ type envConfigs struct {
 	ServerPort   string `mapstructure:"SERVER_PORT"`
 	AuthUserName string `mapstructure:"AUTH_USERNAME"`
 	AuthPassword string `mapstructure:"AUTH_PASSWORD"`
+	K8sApiServer string `mapstructure:"K8S_API_SERVER"`
+	K8sToken     string `mapstructure:"K8S_TOKEN"`
 }
 
 func loadEnvVariables() (config *envConfigs) {

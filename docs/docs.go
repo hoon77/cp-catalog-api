@@ -23,6 +23,18 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/clusters/:clusterId/namespaces/:namespace/releases": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "List Releases",
+                "responses": {}
+            }
+        },
         "/api/repositories": {
             "get": {
                 "description": "List Repository",

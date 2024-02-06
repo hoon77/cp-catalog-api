@@ -6,21 +6,33 @@ import (
 )
 
 type ResultStatus struct {
-	ResultCode     string `json:"resultCode"`
-	ResultMessage  string `json:"resultMessage"`
-	HttpStatusCode int    `json:"httpStatusCode"`
-	DetailMessage  string `json:"detailMessage"`
+	ResultCode     string      `json:"resultCode"`
+	ResultMessage  string      `json:"resultMessage"`
+	HttpStatusCode int         `json:"httpStatusCode"`
+	DetailMessage  string      `json:"detailMessage"`
+	Items          interface{} `json:"items"`
 }
 
-// func respOK(c *fiber.Ctx, data interface{})
-func RespOK(c *fiber.Ctx) error {
+func RespOK(c *fiber.Ctx, data interface{}) error {
 	resultStatus := ResultStatus{
-		ResultCode:     localize(c, "OK"),
-		ResultMessage:  "message",
+		ResultCode:     RESULT_STATUS_SUCCESS,
+		ResultMessage:  localize(c, "OK"),
 		HttpStatusCode: 0,
-		DetailMessage:  "detail Message",
+		DetailMessage:  localize(c, "OK"),
+		Items:          data,
 	}
 	return c.Status(200).JSON(resultStatus)
+
+}
+
+func RespErr(c *fiber.Ctx, err error) error {
+	resultStatus := ResultStatus{
+		ResultCode:     RESULT_STATUS_FAIL,
+		ResultMessage:  err.Error(),
+		HttpStatusCode: 400,
+		DetailMessage:  err.Error(),
+	}
+	return c.Status(400).JSON(resultStatus)
 
 }
 

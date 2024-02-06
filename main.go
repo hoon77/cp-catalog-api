@@ -7,6 +7,11 @@ import (
 	_ "go-api/docs"
 	"go-api/middleware"
 	"go-api/router"
+	"helm.sh/helm/v3/pkg/cli"
+)
+
+var (
+	settings = cli.New()
 )
 
 func init() {

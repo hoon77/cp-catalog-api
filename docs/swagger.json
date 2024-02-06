@@ -17,6 +17,18 @@
     "host": "localhost:8080",
     "basePath": "/",
     "paths": {
+        "/api/clusters/:clusterId/namespaces/:namespace/releases": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "List Releases",
+                "responses": {}
+            }
+        },
         "/api/repositories": {
             "get": {
                 "description": "List Repository",

@@ -12,6 +12,14 @@ info:
   title: Container Platform Helm Rest API
   version: "1.0"
 paths:
+  /api/clusters/:clusterId/namespaces/:namespace/releases:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses: {}
+      summary: List Releases
   /api/repositories:
     get:
       consumes:
