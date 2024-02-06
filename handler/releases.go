@@ -6,6 +6,7 @@ import (
 	"go-api/common"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/release"
+	"sigs.k8s.io/yaml"
 	"strconv"
 )
 
@@ -53,29 +54,29 @@ func ListReleases(c *fiber.Ctx) error {
 // @Produce json
 // @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release [Get]
 func GetRelease(c *fiber.Ctx) error {
-	name := c.Param("release")
-	namespace := c.Param("namespace")
+	infos := []string{"hooks", "manifest", "notes", "values"}
+
+	name := c.Params("release")
 	info := c.Query("info")
-	kubeConfig := c.Query("kube_config")
+
 	if info == "" {
 		info = "values"
 	}
-	kubeContext := c.Query("kube_context")
-	infos := []string{"hooks", "manifest", "notes", "values"}
+
 	infoMap := map[string]bool{}
 	for _, i := range infos {
 		infoMap[i] = true
 	}
 	if _, ok := infoMap[info]; !ok {
-		respErr(c, fmt.Errorf("bad info %s, release info only support hooks/manifest/notes/values", info))
-		return
-	}
-	actionConfig, err := actionConfigInit(InitKubeInformation(namespace, kubeContext, kubeConfig))
-	if err != nil {
-		respErr(c, err)
-		return
+		return common.RespErr(c, fmt.Errorf("bad info %s, release info only support hooks/manifest/notes/values", info))
 	}
 
+	actionConfig, err := common.ActionConfigInit(c)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	// values
 	if info == "values" {
 		output := c.Query("output")
 		// get values output format
@@ -83,50 +84,46 @@ func GetRelease(c *fiber.Ctx) error {
 			output = "json"
 		}
 		if output != "json" && output != "yaml" {
-			respErr(c, fmt.Errorf("invalid format type %s, output only support json/yaml", output))
-			return
+			return common.RespErr(c, fmt.Errorf("invalid format type %s, output only support json/yaml", output))
 		}
 
 		client := action.NewGetValues(actionConfig)
 		results, err := client.Run(name)
 		if err != nil {
-			respErr(c, err)
-			return
+			return common.RespErr(c, err)
 		}
+
 		if output == "yaml" {
 			obj, err := yaml.Marshal(results)
 			if err != nil {
-				respErr(c, err)
-				return
+				return common.RespErr(c, err)
 			}
-			respOK(c, string(obj))
-			return
+			return common.RespOK(c, string(obj))
 		}
-		respOK(c, results)
-		return
+		return common.RespOK(c, results)
 	}
 
 	client := action.NewGet(actionConfig)
 	results, err := client.Run(name)
 	if err != nil {
-		respErr(c, err)
-		return
+		return common.RespErr(c, err)
 	}
+
 	// TODO: support all
 	if info == "hooks" {
 		if len(results.Hooks) < 1 {
-			respOK(c, []*release.Hook{})
-			return
+			return common.RespOK(c, []*release.Hook{})
 		}
-		respOK(c, results.Hooks)
-		return
+		return common.RespOK(c, results.Hooks)
+
 	} else if info == "manifest" {
-		respOK(c, results.Manifest)
-		return
+		return common.RespOK(c, results.Manifest)
 	} else if info == "notes" {
-		respOK(c, results.Info.Notes)
-		return
+		return common.RespOK(c, results.Info.Notes)
+
 	}
+
+	return common.RespOK(c, nil)
 }
 
 func constructReleaseElement(r *release.Release, showStatus bool) releaseElement {
