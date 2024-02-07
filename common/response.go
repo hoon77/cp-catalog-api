@@ -33,6 +33,7 @@ func RespErr(c *fiber.Ctx, err error) error {
 		ResultMessage:  err.Error(),
 		HttpStatusCode: 400,
 		DetailMessage:  err.Error(),
+		Items:          make([]string, 0),
 	}
 	return c.Status(400).JSON(resultStatus)
 

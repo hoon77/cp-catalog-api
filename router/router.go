@@ -21,7 +21,7 @@ func APIRoutes(app *fiber.App) {
 		// helm list
 		releases.Get("", handler.ListReleases)
 		// helm get
-		releases.Get("/:release", handler.GetRelease)
+		releases.Get("/:release", handler.GetReleaseInfo)
 	}
 
 }

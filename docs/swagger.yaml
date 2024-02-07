@@ -20,6 +20,14 @@ paths:
       - application/json
       responses: {}
       summary: List Releases
+  /api/clusters/:clusterId/namespaces/:namespace/releases/:release:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses: {}
+      summary: Get Release Info
   /api/repositories:
     get:
       consumes:

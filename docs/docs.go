@@ -35,6 +35,18 @@ const docTemplate = `{
                 "responses": {}
             }
         },
+        "/api/clusters/:clusterId/namespaces/:namespace/releases/:release": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get Release Info",
+                "responses": {}
+            }
+        },
         "/api/repositories": {
             "get": {
                 "description": "List Repository",

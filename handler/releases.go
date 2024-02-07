@@ -11,16 +11,19 @@ import (
 )
 
 type releaseElement struct {
-	Name         string `json:"name"`
-	Namespace    string `json:"namespace"`
-	Revision     string `json:"revision"`
-	Updated      string `json:"updated"`
-	Status       string `json:"status"`
-	Chart        string `json:"chart"`
-	ChartVersion string `json:"chart_version"`
-	AppVersion   string `json:"app_version"`
-	Icon         string `json:"icon"`
-	Notes        string `json:"notes,omitempty"`
+	Name         string      `json:"name"`
+	Namespace    string      `json:"namespace"`
+	Revision     string      `json:"revision"`
+	Updated      string      `json:"updated"`
+	Status       string      `json:"status"`
+	Chart        string      `json:"chart"`
+	ChartVersion string      `json:"chart_version"`
+	AppVersion   string      `json:"app_version"`
+	Icon         string      `json:"icon"`
+	Notes        string      `json:"notes,omitempty"`
+	Values       string      `json:"values"`
+	Resources    interface{} `json:"resources"`
+	Mainifest    string      `json:"manifest"`
 }
 
 // ListReleases godoc
@@ -48,12 +51,79 @@ func ListReleases(c *fiber.Ctx) error {
 	return common.RespOK(c, elements)
 }
 
-// GetRelease godoc
-// @Summary Get Release
+// GetReleaseInfo godoc
+// @Summary Get Release Info
 // @Accept json
 // @Produce json
 // @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release [Get]
-func GetRelease(c *fiber.Ctx) error {
+func GetReleaseInfo(c *fiber.Ctx) error {
+	name := c.Params("release")
+	actionConfig, err := common.ActionConfigInit(c)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	client := action.NewGet(actionConfig)
+	results, err := client.Run(name)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	releaseElement := constructReleaseInfoElement(results)
+
+	return common.RespOK(c, releaseElement)
+}
+
+func constructReleaseElement(r *release.Release, showStatus bool) releaseElement {
+	element := releaseElement{
+		Name:         r.Name,
+		Namespace:    r.Namespace,
+		Revision:     strconv.Itoa(r.Version),
+		Status:       r.Info.Status.String(),
+		Chart:        r.Chart.Metadata.Name,
+		ChartVersion: r.Chart.Metadata.Version,
+		AppVersion:   r.Chart.Metadata.AppVersion,
+		Icon:         r.Chart.Metadata.Icon,
+		Resources:    make([]string, 0),
+	}
+	if showStatus {
+		element.Notes = r.Info.Notes
+	}
+	t := "-"
+	if tspb := r.Info.LastDeployed; !tspb.IsZero() {
+		t = tspb.String()
+	}
+	element.Updated = t
+
+	return element
+}
+
+func constructReleaseInfoElement(r *release.Release) releaseElement {
+	element := releaseElement{
+		Name:         r.Name,
+		Namespace:    r.Namespace,
+		Revision:     strconv.Itoa(r.Version),
+		Status:       r.Info.Status.String(),
+		Chart:        r.Chart.Metadata.Name,
+		ChartVersion: r.Chart.Metadata.Version,
+		AppVersion:   r.Chart.Metadata.AppVersion,
+		Icon:         r.Chart.Metadata.Icon,
+		Notes:        r.Info.Notes,
+		Values:       ConvertYAML(r.Chart.Values),
+		Resources:    GetResources(r.Manifest),
+		Mainifest:    r.Manifest,
+	}
+
+	t := "-"
+	if tspb := r.Info.LastDeployed; !tspb.IsZero() {
+		t = tspb.String()
+	}
+	element.Updated = t
+
+	return element
+}
+
+func GetReleaseOld(c *fiber.Ctx) error {
 	infos := []string{"hooks", "manifest", "notes", "values"}
 
 	name := c.Params("release")
@@ -124,27 +194,4 @@ func GetRelease(c *fiber.Ctx) error {
 	}
 
 	return common.RespOK(c, nil)
-}
-
-func constructReleaseElement(r *release.Release, showStatus bool) releaseElement {
-	element := releaseElement{
-		Name:         r.Name,
-		Namespace:    r.Namespace,
-		Revision:     strconv.Itoa(r.Version),
-		Status:       r.Info.Status.String(),
-		Chart:        r.Chart.Metadata.Name,
-		ChartVersion: r.Chart.Metadata.Version,
-		AppVersion:   r.Chart.Metadata.AppVersion,
-		Icon:         r.Chart.Metadata.Icon,
-	}
-	if showStatus {
-		element.Notes = r.Info.Notes
-	}
-	t := "-"
-	if tspb := r.Info.LastDeployed; !tspb.IsZero() {
-		t = tspb.String()
-	}
-	element.Updated = t
-
-	return element
 }

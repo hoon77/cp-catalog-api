@@ -3,8 +3,9 @@ package common
 const RESULT_STATUS_SUCCESS = "SUCCESS"
 const RESULT_STATUS_FAIL = "FAIL"
 
-const OK = "OK"
+const EMPTY_STR = "-"
 
+const OK = "OK"
 const ALL_NAMESPACE = "all"
 
 // VAULT
