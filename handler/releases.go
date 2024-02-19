@@ -5,9 +5,18 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"go-api/common"
 	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/cli"
+	"helm.sh/helm/v3/pkg/downloader"
+	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/release"
 	"sigs.k8s.io/yaml"
 	"strconv"
+)
+
+var (
+	settings = cli.New()
 )
 
 type releaseElement struct {
@@ -28,7 +37,7 @@ type releaseElement struct {
 
 // ListReleases godoc
 // @Summary List Releases
-// @Accept json
+// @Accept json-+
 // @Produce json
 // @Router /api/clusters/:clusterId/namespaces/:namespace/releases [Get]
 func ListReleases(c *fiber.Ctx) error {
@@ -72,6 +81,97 @@ func GetReleaseInfo(c *fiber.Ctx) error {
 	releaseElement := constructReleaseInfoElement(results)
 
 	return common.RespOK(c, releaseElement)
+}
+
+// InstallRelease godoc
+// @Summary Install Release
+// @Accept json
+// @Produce json
+// @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release [Post]
+func InstallRelease(c *fiber.Ctx) error {
+	//name := c.Params("release")
+	release := new(releaseElement)
+	if err := c.BodyParser(release); err != nil {
+		return common.RespErr(c, err)
+	}
+
+	if release.Chart == "" {
+		return common.RespErr(c, fmt.Errorf("CHART_INFO_INVALID"))
+	}
+
+	if err = runInstall(name, namespace, kubeContext, aimChart, kubeConfig, options); err != nil {
+		respErr(c, err)
+		return
+	}
+
+	respOK(c, err)
+	return
+}
+
+func runInstall(c *fiber.Ctx, name, namespace, kubeContext, aimChart, kubeConfig string, release releaseElement) (err error) {
+	actionConfig, err := common.ActionConfigInit(c)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	client := action.NewInstall(actionConfig)
+	client.ReleaseName = name
+	client.Namespace = namespace
+	client.ChartPathOptions.Version = release.ChartVersion
+
+	cp, err := client.ChartPathOptions.LocateChart(aimChart, settings)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	chartRequested, err := loader.Load(cp)
+	if err != nil {
+		return
+	}
+
+	validInstallableChart, err := isChartInstallable(chartRequested)
+	if !validInstallableChart {
+		return
+	}
+
+	if req := chartRequested.Metadata.Dependencies; req != nil {
+		// If CheckDependencies returns an error, we have unfulfilled dependencies.
+		// As of Helm 2.4.0, this is treated as a stopping condition:
+		// https://github.com/helm/helm/issues/2209
+		if err = action.CheckDependencies(chartRequested, req); err != nil {
+			if client.DependencyUpdate {
+				man := &downloader.Manager{
+					ChartPath:        cp,
+					Keyring:          client.ChartPathOptions.Keyring,
+					SkipUpdate:       false,
+					Getters:          getter.All(settings),
+					RepositoryConfig: settings.RepositoryConfig,
+					RepositoryCache:  settings.RepositoryCache,
+				}
+				if err = man.Update(); err != nil {
+					return
+				}
+			} else {
+				return
+			}
+		}
+	}
+
+	_, err = client.Run(chartRequested, nil)
+	if err != nil {
+		return
+	}
+
+	return nil
+}
+
+func isChartInstallable(ch *chart.Chart) (bool, error) {
+	switch ch.Metadata.Type {
+	case "", "application":
+		return true, nil
+	}
+
+	return false, fmt.Errorf("charts are not installable")
 }
 
 func constructReleaseElement(r *release.Release, showStatus bool) releaseElement {

@@ -12,5 +12,6 @@
   "REPO_NO_NAMED_FOUND" : "No repository found with that name",
   "REPO_UNABLE_UPDATE" : "Unable to get an update from the repository",
   "REPO_FAILED_LOADING_FILE" : "Failed loading repository config file",
-  "INSTALLATION_FAILED" : "Installation has failed...reason:"
+  "INSTALLATION_FAILED" : "Installation has failed...reason:",
+  "CHART_INFO_INVALID" :  "Chart information is invalid."
 }

@@ -30,9 +30,9 @@ func RespErr(c *fiber.Ctx, err error) error {
 	log.Errorf("[Error Reason] : %s", err.Error())
 	resultStatus := ResultStatus{
 		ResultCode:     RESULT_STATUS_FAIL,
-		ResultMessage:  err.Error(),
+		ResultMessage:  localize(c, err.Error()),
 		HttpStatusCode: 400,
-		DetailMessage:  err.Error(),
+		DetailMessage:  localize(c, err.Error()),
 		Items:          make([]string, 0),
 	}
 	return c.Status(400).JSON(resultStatus)
