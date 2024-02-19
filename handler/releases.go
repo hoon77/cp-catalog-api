@@ -99,27 +99,25 @@ func InstallRelease(c *fiber.Ctx) error {
 		return common.RespErr(c, fmt.Errorf("CHART_INFO_INVALID"))
 	}
 
-	if err = runInstall(name, namespace, kubeContext, aimChart, kubeConfig, options); err != nil {
-		respErr(c, err)
-		return
+	if err := runInstall(c, release); err != nil {
+		return common.RespErr(c, err)
 	}
 
-	respOK(c, err)
-	return
+	return common.RespOK(c, nil)
 }
 
-func runInstall(c *fiber.Ctx, name, namespace, kubeContext, aimChart, kubeConfig string, release releaseElement) (err error) {
+func runInstall(c *fiber.Ctx, release *releaseElement) (err error) {
 	actionConfig, err := common.ActionConfigInit(c)
 	if err != nil {
 		return common.RespErr(c, err)
 	}
 
 	client := action.NewInstall(actionConfig)
-	client.ReleaseName = name
-	client.Namespace = namespace
-	client.ChartPathOptions.Version = release.ChartVersion
+	client.ReleaseName = release.Name
+	client.Namespace = release.Namespace
+	client.Version = release.ChartVersion
 
-	cp, err := client.ChartPathOptions.LocateChart(aimChart, settings)
+	cp, err := client.ChartPathOptions.LocateChart(release.Name, settings)
 	if err != nil {
 		return common.RespErr(c, err)
 	}
