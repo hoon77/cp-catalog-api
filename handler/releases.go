@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/pkg/errors"
 	"go-api/common"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
@@ -93,7 +94,7 @@ func InstallRelease(c *fiber.Ctx) error {
 	newRelease.Namespace = c.Params("namespace")
 
 	if newRelease.Chart == "" {
-		return common.RespErr(c, fmt.Errorf("CHART_INFO_INVALID"))
+		return common.RespErr(c, fmt.Errorf(common.CHART_INFO_INVALID))
 	}
 
 	if err := runInstall(c, newRelease); err != nil {
@@ -103,9 +104,14 @@ func InstallRelease(c *fiber.Ctx) error {
 }
 
 func runInstall(c *fiber.Ctx, release *releaseElement) (err error) {
+	vals, err := mergeValues(release.Values)
+	if err != nil {
+		return
+	}
+
 	actionConfig, err := common.ActionConfigInit(c)
 	if err != nil {
-		return err
+		return
 	}
 
 	client := action.NewInstall(actionConfig)
@@ -153,7 +159,7 @@ func runInstall(c *fiber.Ctx, release *releaseElement) (err error) {
 		}
 	}
 
-	_, err = client.Run(chartRequested, nil)
+	_, err = client.Run(chartRequested, vals)
 	if err != nil {
 		return
 	}
@@ -217,6 +223,18 @@ func constructReleaseInfoElement(r *release.Release) releaseElement {
 	element.Updated = t
 
 	return element
+}
+
+// MergeValues merges values from files specified via -f/--values and directly
+// via --set-json, --set, --set-string, or --set-file, marshaling them to YAML
+func mergeValues(values string) (map[string]interface{}, error) {
+	byts := []byte(values)
+	vals := map[string]interface{}{}
+
+	if err := yaml.Unmarshal(byts, &vals); err != nil {
+		return nil, errors.Wrapf(err, common.FAILED_TO_PARSE_VALUES)
+	}
+	return vals, nil
 }
 
 func GetReleaseOld(c *fiber.Ctx) error {
