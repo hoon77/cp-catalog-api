@@ -3,7 +3,6 @@ package handler
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	"github.com/pkg/errors"
 	"go-api/common"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
@@ -232,7 +231,7 @@ func mergeValues(values string) (map[string]interface{}, error) {
 	vals := map[string]interface{}{}
 
 	if err := yaml.Unmarshal(byts, &vals); err != nil {
-		return nil, errors.Wrapf(err, common.FAILED_TO_PARSE_VALUES)
+		return nil, fmt.Errorf(common.FAILED_TO_PARSE_VALUES)
 	}
 	return vals, nil
 }
