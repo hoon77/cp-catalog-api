@@ -5,13 +5,9 @@ import (
 	"github.com/gofiber/fiber/v2/log"
 	"go-api/config"
 	_ "go-api/docs"
+	"go-api/handler"
 	"go-api/middleware"
 	"go-api/router"
-	"helm.sh/helm/v3/pkg/cli"
-)
-
-var (
-	settings = cli.New()
 )
 
 func init() {
@@ -29,12 +25,13 @@ func init() {
 // @host localhost:8080
 // @BasePath /
 func main() {
-	log.Info("Hello, World!")
+	log.Info("Hello, Helm Rest API!")
 	app := fiber.New()
 	middleware.FiberMiddleware(app)
 	middleware.SetupLocalize(app)
 	router.SwaggerRoute(app)
 	router.APIRoutes(app)
+	handler.Settings()
 	err := app.Listen(config.Env.ServerPort)
 	if err != nil {
 		log.Fatal("Server is not running! Reason: %v", err)

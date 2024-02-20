@@ -17,6 +17,8 @@ type envConfigs struct {
 	AuthPassword string `mapstructure:"AUTH_PASSWORD"`
 	K8sApiServer string `mapstructure:"K8S_API_SERVER"`
 	K8sToken     string `mapstructure:"K8S_TOKEN"`
+	RepoConfig   string `mapstructure:"REPO_CONFIG"`
+	RepoCache    string `mapstructure:"REPO_CACHE"`
 }
 
 func loadEnvVariables() (config *envConfigs) {

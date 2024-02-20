@@ -40,6 +40,9 @@ func RespErr(c *fiber.Ctx, err error) error {
 }
 
 func localize(c *fiber.Ctx, msg string) string {
-	localize_msg, _ := fiberi18n.Localize(c, msg)
+	localize_msg, err := fiberi18n.Localize(c, msg)
+	if err != nil {
+		return msg
+	}
 	return localize_msg
 }

@@ -7,7 +7,6 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
-	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/downloader"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/release"
@@ -15,13 +14,10 @@ import (
 	"strconv"
 )
 
-var (
-	settings = cli.New()
-)
-
 type releaseElement struct {
 	Name         string      `json:"name"`
 	Namespace    string      `json:"namespace"`
+	Repo         string      `json:"repo"`
 	Revision     string      `json:"revision"`
 	Updated      string      `json:"updated"`
 	Status       string      `json:"status"`
@@ -89,27 +85,27 @@ func GetReleaseInfo(c *fiber.Ctx) error {
 // @Produce json
 // @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release [Post]
 func InstallRelease(c *fiber.Ctx) error {
-	//name := c.Params("release")
-	release := new(releaseElement)
-	if err := c.BodyParser(release); err != nil {
+	newRelease := new(releaseElement)
+	if err := c.BodyParser(newRelease); err != nil {
 		return common.RespErr(c, err)
 	}
+	newRelease.Name = c.Params("release")
+	newRelease.Namespace = c.Params("namespace")
 
-	if release.Chart == "" {
+	if newRelease.Chart == "" {
 		return common.RespErr(c, fmt.Errorf("CHART_INFO_INVALID"))
 	}
 
-	if err := runInstall(c, release); err != nil {
+	if err := runInstall(c, newRelease); err != nil {
 		return common.RespErr(c, err)
 	}
-
 	return common.RespOK(c, nil)
 }
 
 func runInstall(c *fiber.Ctx, release *releaseElement) (err error) {
 	actionConfig, err := common.ActionConfigInit(c)
 	if err != nil {
-		return common.RespErr(c, err)
+		return err
 	}
 
 	client := action.NewInstall(actionConfig)
@@ -117,9 +113,11 @@ func runInstall(c *fiber.Ctx, release *releaseElement) (err error) {
 	client.Namespace = release.Namespace
 	client.Version = release.ChartVersion
 
-	cp, err := client.ChartPathOptions.LocateChart(release.Name, settings)
+	aimChart := fmt.Sprintf("%s/%s", release.Repo, release.Chart)
+
+	cp, err := client.ChartPathOptions.LocateChart(aimChart, settings)
 	if err != nil {
-		return common.RespErr(c, err)
+		return
 	}
 
 	chartRequested, err := loader.Load(cp)

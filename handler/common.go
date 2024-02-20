@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"github.com/gofiber/fiber/v2/log"
 	"go-api/common"
+	"go-api/config"
+	"helm.sh/helm/v3/pkg/cli"
 	"io"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/testapigroup/v1"
@@ -11,6 +13,15 @@ import (
 	sigyaml "sigs.k8s.io/yaml"
 	"strings"
 )
+
+var (
+	settings = cli.New()
+)
+
+func Settings() {
+	settings.RepositoryConfig = config.Env.RepoConfig
+	settings.RepositoryCache = config.Env.RepoCache
+}
 
 func GetResources(out string) []*v1.Carp {
 	res, err := ParseManifests(out)
