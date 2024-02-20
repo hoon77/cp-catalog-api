@@ -45,6 +45,26 @@ const docTemplate = `{
                 ],
                 "summary": "Get Release Info",
                 "responses": {}
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Install Release",
+                "responses": {}
+            },
+            "delete": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Uninstall Release",
+                "responses": {}
             }
         },
         "/api/repositories": {

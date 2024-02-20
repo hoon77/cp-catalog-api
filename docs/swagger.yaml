@@ -21,6 +21,13 @@ paths:
       responses: {}
       summary: List Releases
   /api/clusters/:clusterId/namespaces/:namespace/releases/:release:
+    delete:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses: {}
+      summary: Uninstall Release
     get:
       consumes:
       - application/json
@@ -28,6 +35,13 @@ paths:
       - application/json
       responses: {}
       summary: Get Release Info
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses: {}
+      summary: Install Release
   /api/repositories:
     get:
       consumes:

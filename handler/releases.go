@@ -33,7 +33,7 @@ type releaseElement struct {
 
 // ListReleases godoc
 // @Summary List Releases
-// @Accept json-+
+// @Accept json
 // @Produce json
 // @Router /api/clusters/:clusterId/namespaces/:namespace/releases [Get]
 func ListReleases(c *fiber.Ctx) error {
@@ -97,6 +97,26 @@ func InstallRelease(c *fiber.Ctx) error {
 	}
 
 	if err := runInstall(c, newRelease); err != nil {
+		return common.RespErr(c, err)
+	}
+	return common.RespOK(c, nil)
+}
+
+// UninstallRelease godoc
+// @Summary Uninstall Release
+// @Accept json
+// @Produce json
+// @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release [Delete]
+func UninstallRelease(c *fiber.Ctx) error {
+	name := c.Params("release")
+	actionConfig, err := common.ActionConfigInit(c)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	client := action.NewUninstall(actionConfig)
+	_, err = client.Run(name)
+	if err != nil {
 		return common.RespErr(c, err)
 	}
 	return common.RespOK(c, nil)
