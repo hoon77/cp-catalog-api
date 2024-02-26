@@ -215,6 +215,29 @@ func GetReleaseHistories(c *fiber.Ctx) error {
 	return common.RespOK(c, getReleaseHistory(results))
 }
 
+// GetReleaseStatus godoc
+// @Summary Get Release Status
+// @Accept json
+// @Produce json
+// @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release/status [Get]
+func GetReleaseStatus(c *fiber.Ctx) error {
+	name := c.Params("release")
+	actionConfig, err := common.ActionConfigInit(c)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	client := action.NewStatus(actionConfig)
+	client.ShowResources = true
+	results, err := client.Run(name)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+	element := constructReleaseElement(results, true)
+
+	return common.RespOK(c, &element)
+}
+
 func runInstall(c *fiber.Ctx, release *releaseElement) (err error) {
 	vals, err := mergeValues(release.Values)
 	if err != nil {
