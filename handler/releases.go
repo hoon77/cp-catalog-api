@@ -14,6 +14,8 @@ import (
 	"strconv"
 )
 
+var defaultTimeout = "5m0s"
+
 type releaseElement struct {
 	Name         string      `json:"name"`
 	Namespace    string      `json:"namespace"`
@@ -99,6 +101,60 @@ func InstallRelease(c *fiber.Ctx) error {
 	if err := runInstall(c, newRelease); err != nil {
 		return common.RespErr(c, err)
 	}
+	return common.RespOK(c, nil)
+}
+
+// UpgradeRelease godoc
+// @Summary Upgrade Release
+// @Accept json
+// @Produce json
+// @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release [Put]
+func UpgradeRelease(c *fiber.Ctx) error {
+	upgradeRelease := new(releaseElement)
+	if err := c.BodyParser(upgradeRelease); err != nil {
+		return common.RespErr(c, err)
+	}
+	upgradeRelease.Name = c.Params("release")
+	upgradeRelease.Namespace = c.Params("namespace")
+	if upgradeRelease.Chart == "" {
+		return common.RespErr(c, fmt.Errorf(common.CHART_INFO_INVALID))
+	}
+
+	vals, err := mergeValues(upgradeRelease.Values)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	actionConfig, err := common.ActionConfigInit(c)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	client := action.NewUpgrade(actionConfig)
+	client.Namespace = upgradeRelease.Namespace
+
+	aimChart := fmt.Sprintf("%s/%s", upgradeRelease.Repo, upgradeRelease.Chart)
+	cp, err := client.ChartPathOptions.LocateChart(aimChart, settings)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	chartRequested, err := loader.Load(cp)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	if req := chartRequested.Metadata.Dependencies; req != nil {
+		if err := action.CheckDependencies(chartRequested, req); err != nil {
+			return common.RespErr(c, err)
+		}
+	}
+
+	_, err = client.Run(upgradeRelease.Name, chartRequested, vals)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
 	return common.RespOK(c, nil)
 }
 
