@@ -10,6 +10,7 @@ import (
 	"helm.sh/helm/v3/pkg/downloader"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/release"
+	helmtime "helm.sh/helm/v3/pkg/time"
 	"sigs.k8s.io/yaml"
 	"strconv"
 )
@@ -32,6 +33,16 @@ type releaseElement struct {
 	Resources    interface{} `json:"resources"`
 	Mainifest    string      `json:"manifest"`
 }
+
+type releaseInfo struct {
+	Revision    int           `json:"revision"`
+	Updated     helmtime.Time `json:"updated"`
+	Status      string        `json:"status"`
+	Chart       string        `json:"chart"`
+	AppVersion  string        `json:"app_version"`
+	Description string        `json:"description"`
+}
+type releaseHistory []releaseInfo
 
 // ListReleases godoc
 // @Summary List Releases
@@ -179,6 +190,31 @@ func UninstallRelease(c *fiber.Ctx) error {
 	return common.RespOK(c, nil)
 }
 
+// GetReleaseHistories godoc
+// @Summary Get Release History
+// @Accept json
+// @Produce json
+// @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release/histories [Get]
+func GetReleaseHistories(c *fiber.Ctx) error {
+	name := c.Params("release")
+	actionConfig, err := common.ActionConfigInit(c)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	client := action.NewHistory(actionConfig)
+	results, err := client.Run(name)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	if len(results) == 0 {
+		return common.RespOK(c, &releaseHistory{})
+	}
+
+	return common.RespOK(c, getReleaseHistory(results))
+}
+
 func runInstall(c *fiber.Ctx, release *releaseElement) (err error) {
 	vals, err := mergeValues(release.Values)
 	if err != nil {
@@ -313,6 +349,49 @@ func mergeValues(values string) (map[string]interface{}, error) {
 	return vals, nil
 }
 
+func getReleaseHistory(rls []*release.Release) (history releaseHistory) {
+	for i := len(rls) - 1; i >= 0; i-- {
+		r := rls[i]
+		c := formatChartname(r.Chart)
+		s := r.Info.Status.String()
+		v := r.Version
+		d := r.Info.Description
+		a := formatAppVersion(r.Chart)
+
+		rInfo := releaseInfo{
+			Revision:    v,
+			Status:      s,
+			Chart:       c,
+			AppVersion:  a,
+			Description: d,
+		}
+		if !r.Info.LastDeployed.IsZero() {
+			rInfo.Updated = r.Info.LastDeployed
+
+		}
+		history = append(history, rInfo)
+	}
+
+	return history
+}
+
+func formatChartname(c *chart.Chart) string {
+	if c == nil || c.Metadata == nil {
+		// This is an edge case that has happened in prod, though we don't
+		// know how: https://github.com/helm/helm/issues/1347
+		return "MISSING"
+	}
+	return fmt.Sprintf("%s-%s", c.Name(), c.Metadata.Version)
+}
+
+func formatAppVersion(c *chart.Chart) string {
+	if c == nil || c.Metadata == nil {
+		// This is an edge case that has happened in prod, though we don't
+		// know how: https://github.com/helm/helm/issues/1347
+		return "MISSING"
+	}
+	return c.AppVersion()
+}
 func GetReleaseOld(c *fiber.Ctx) error {
 	infos := []string{"hooks", "manifest", "notes", "values"}
 

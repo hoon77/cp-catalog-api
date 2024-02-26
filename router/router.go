@@ -28,7 +28,8 @@ func APIRoutes(app *fiber.App) {
 		releases.Put("/:release", handler.UpgradeRelease)
 		// helm uninstall
 		releases.Delete("/:release", handler.UninstallRelease)
-
+		// helm release history
+		releases.Get("/:release/histories", handler.GetReleaseHistories)
 	}
 
 }
