@@ -132,6 +132,7 @@ func UpgradeRelease(c *fiber.Ctx) error {
 
 	client := action.NewUpgrade(actionConfig)
 	client.Namespace = upgradeRelease.Namespace
+	client.Version = upgradeRelease.ChartVersion
 
 	aimChart := fmt.Sprintf("%s/%s", upgradeRelease.Repo, upgradeRelease.Chart)
 	cp, err := client.ChartPathOptions.LocateChart(aimChart, settings)
