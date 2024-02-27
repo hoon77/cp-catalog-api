@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"go-api/common"
@@ -11,6 +12,7 @@ import (
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/release"
 	helmtime "helm.sh/helm/v3/pkg/time"
+	"k8s.io/kubectl/pkg/cmd/get"
 	"sigs.k8s.io/yaml"
 	"strconv"
 )
@@ -229,13 +231,39 @@ func GetReleaseStatus(c *fiber.Ctx) error {
 
 	client := action.NewStatus(actionConfig)
 	client.ShowResources = true
-	results, err := client.Run(name)
+	client.ShowResourcesTable = true
+	status, err := client.Run(name)
 	if err != nil {
 		return common.RespErr(c, err)
 	}
-	element := constructReleaseElement(results, true)
 
-	return common.RespOK(c, &element)
+	buf := new(bytes.Buffer)
+	if status.Info.Resources != nil && len(status.Info.Resources) > 0 {
+		printFlags := get.NewHumanPrintFlags()
+		typePrinter, _ := printFlags.ToPrinter("")
+		printer := &get.TablePrinter{Delegate: typePrinter}
+
+		var keys []string
+		for key := range status.Info.Resources {
+			keys = append(keys, key)
+		}
+
+		for _, t := range keys {
+			_, _ = fmt.Fprintf(buf, "==> %s\n", t)
+
+			vk := status.Info.Resources[t]
+			for _, resource := range vk {
+				if err := printer.PrintObj(resource, buf); err != nil {
+					_, _ = fmt.Fprintf(buf, "failed to print object type %s: %v\n", t, err)
+				}
+			}
+
+			buf.WriteString("\n")
+		}
+
+	}
+
+	return common.RespOK(c, buf.String())
 }
 
 func runInstall(c *fiber.Ctx, release *releaseElement) (err error) {
