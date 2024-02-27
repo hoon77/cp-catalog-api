@@ -13,5 +13,6 @@
   "REPO_UNABLE_UPDATE" : "Repository 업데이트를 실패했습니다.",
   "REPO_FAILED_LOADING_FILE" : "Repository 구성 파일을 로드하는 데 실패했습니다.",
   "INSTALLATION FAILED" : "설치에 실패했습니다...세부사항:",
-  "CHART_INFO_INVALID" :  "차트 정보가 올바르지 않습니다."
+  "CHART_INFO_INVALID" :  "차트 정보가 올바르지 않습니다.",
+  "REVERSION_NUMBER_INVALID" :  "Revision (version) 수가 올바르지 않습니다."
 }

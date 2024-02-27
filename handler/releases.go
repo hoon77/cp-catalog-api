@@ -188,7 +188,7 @@ func RollbackRelease(c *fiber.Ctx) error {
 
 	reversion, err := strconv.Atoi(reversionStr)
 	if err != nil {
-		return common.RespErr(c, err)
+		return common.RespErr(c, fmt.Errorf(common.REVERSION_NUMBER_INVALID))
 	}
 
 	actionConfig, err := common.ActionConfigInit(c)

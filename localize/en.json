@@ -13,5 +13,6 @@
   "REPO_UNABLE_UPDATE" : "Unable to get an update from the repository",
   "REPO_FAILED_LOADING_FILE" : "Failed loading repository config file",
   "INSTALLATION_FAILED" : "Installation has failed...reason:",
-  "CHART_INFO_INVALID" :  "Chart information is invalid."
+  "CHART_INFO_INVALID" :  "Chart information is invalid.",
+  "REVERSION_NUMBER_INVALID" :  "Revision (version) number is invalid."
 }
