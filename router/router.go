@@ -26,12 +26,14 @@ func APIRoutes(app *fiber.App) {
 		releases.Post("/:release", handler.InstallRelease)
 		//helm upgrade
 		releases.Put("/:release", handler.UpgradeRelease)
+		// helm rollback
+		releases.Put("/:release/versions/:reversion", handler.RollbackRelease)
 		// helm uninstall
 		releases.Delete("/:release", handler.UninstallRelease)
 		// helm release history
 		releases.Get("/:release/histories", handler.GetReleaseHistories)
-		// helm release status
-		releases.Get("/:release/status", handler.GetReleaseStatus)
+		// helm release resources status
+		releases.Get("/:release/resources", handler.GetReleaseResources)
 	}
 
 }

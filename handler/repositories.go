@@ -5,9 +5,9 @@ import (
 	"go-api/common"
 )
 
-// AddRepos godoc
+// AddRepos
 // @Summary Add Repository
-// @Description Add Repository
+// @Tags Repository
 // @Accept json
 // @Produce json
 // @Router /api/repositories [Post]
@@ -19,9 +19,9 @@ func AddRepos(c *fiber.Ctx) error {
 	})
 }
 
-// ListRepos godoc
+// ListRepos
 // @Summary List Repository
-// @Description List Repository
+// @Tags Repository
 // @Accept json
 // @Produce json
 // @Router /api/repositories [Get]

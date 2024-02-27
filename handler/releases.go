@@ -46,8 +46,9 @@ type releaseInfo struct {
 }
 type releaseHistory []releaseInfo
 
-// ListReleases godoc
+// ListReleases
 // @Summary List Releases
+// @Tags Releases
 // @Accept json
 // @Produce json
 // @Router /api/clusters/:clusterId/namespaces/:namespace/releases [Get]
@@ -71,8 +72,9 @@ func ListReleases(c *fiber.Ctx) error {
 	return common.RespOK(c, elements)
 }
 
-// GetReleaseInfo godoc
-// @Summary Get Release Info
+// GetReleaseInfo
+// @Summary Get Releases Info
+// @Tags Releases
 // @Accept json
 // @Produce json
 // @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release [Get]
@@ -94,8 +96,9 @@ func GetReleaseInfo(c *fiber.Ctx) error {
 	return common.RespOK(c, releaseElement)
 }
 
-// InstallRelease godoc
+// InstallRelease
 // @Summary Install Release
+// @Tags Releases
 // @Accept json
 // @Produce json
 // @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release [Post]
@@ -117,8 +120,9 @@ func InstallRelease(c *fiber.Ctx) error {
 	return common.RespOK(c, nil)
 }
 
-// UpgradeRelease godoc
+// UpgradeRelease
 // @Summary Upgrade Release
+// @Tags Releases
 // @Accept json
 // @Produce json
 // @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release [Put]
@@ -172,8 +176,40 @@ func UpgradeRelease(c *fiber.Ctx) error {
 	return common.RespOK(c, nil)
 }
 
-// UninstallRelease godoc
+// RollbackRelease
+// @Summary Rollback Release
+// @Tags Releases
+// @Accept json
+// @Produce json
+// @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release/versions/:reversion [Put]
+func RollbackRelease(c *fiber.Ctx) error {
+	name := c.Params("release")
+	reversionStr := c.Params("reversion")
+
+	reversion, err := strconv.Atoi(reversionStr)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	actionConfig, err := common.ActionConfigInit(c)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	client := action.NewRollback(actionConfig)
+	client.Version = reversion
+
+	err = client.Run(name)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	return common.RespOK(c, nil)
+}
+
+// UninstallRelease
 // @Summary Uninstall Release
+// @Tags Releases
 // @Accept json
 // @Produce json
 // @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release [Delete]
@@ -192,8 +228,9 @@ func UninstallRelease(c *fiber.Ctx) error {
 	return common.RespOK(c, nil)
 }
 
-// GetReleaseHistories godoc
-// @Summary Get Release History
+// GetReleaseHistories
+// @Summary Get Release Histories
+// @Tags Releases
 // @Accept json
 // @Produce json
 // @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release/histories [Get]
@@ -217,12 +254,13 @@ func GetReleaseHistories(c *fiber.Ctx) error {
 	return common.RespOK(c, getReleaseHistory(results))
 }
 
-// GetReleaseStatus godoc
-// @Summary Get Release Status
+// GetReleaseResources
+// @Summary Get Release Resources
+// @Tags Releases
 // @Accept json
 // @Produce json
-// @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release/status [Get]
-func GetReleaseStatus(c *fiber.Ctx) error {
+// @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release/resources [Get]
+func GetReleaseResources(c *fiber.Ctx) error {
 	name := c.Params("release")
 	actionConfig, err := common.ActionConfigInit(c)
 	if err != nil {

@@ -31,6 +31,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Releases"
+                ],
                 "summary": "List Releases",
                 "responses": {}
             }
@@ -43,7 +46,23 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "summary": "Get Release Info",
+                "tags": [
+                    "Releases"
+                ],
+                "summary": "Get Releases Info",
+                "responses": {}
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Releases"
+                ],
+                "summary": "Upgrade Release",
                 "responses": {}
             },
             "post": {
@@ -52,6 +71,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Releases"
                 ],
                 "summary": "Install Release",
                 "responses": {}
@@ -63,29 +85,81 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Releases"
+                ],
                 "summary": "Uninstall Release",
+                "responses": {}
+            }
+        },
+        "/api/clusters/:clusterId/namespaces/:namespace/releases/:release/histories": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Releases"
+                ],
+                "summary": "Get Release Histories",
+                "responses": {}
+            }
+        },
+        "/api/clusters/:clusterId/namespaces/:namespace/releases/:release/resources": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Releases"
+                ],
+                "summary": "Get Release Resources",
+                "responses": {}
+            }
+        },
+        "/api/clusters/:clusterId/namespaces/:namespace/releases/:release/versions/:reversion": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Releases"
+                ],
+                "summary": "Rollback Release",
                 "responses": {}
             }
         },
         "/api/repositories": {
             "get": {
-                "description": "List Repository",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Repository"
                 ],
                 "summary": "List Repository",
                 "responses": {}
             },
             "post": {
-                "description": "Add Repository",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Repository"
                 ],
                 "summary": "Add Repository",
                 "responses": {}
