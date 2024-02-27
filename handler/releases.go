@@ -2,6 +2,7 @@ package handler
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"go-api/common"
@@ -11,6 +12,7 @@ import (
 	"helm.sh/helm/v3/pkg/downloader"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v3/pkg/storage/driver"
 	helmtime "helm.sh/helm/v3/pkg/time"
 	"k8s.io/kubectl/pkg/cmd/get"
 	"sigs.k8s.io/yaml"
@@ -88,6 +90,9 @@ func GetReleaseInfo(c *fiber.Ctx) error {
 	client := action.NewGet(actionConfig)
 	results, err := client.Run(name)
 	if err != nil {
+		if errors.Is(err, driver.ErrReleaseNotFound) {
+			return common.RespErr(c, fmt.Errorf(common.RELEASE_NOT_FOUND))
+		}
 		return common.RespErr(c, err)
 	}
 

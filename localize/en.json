@@ -14,5 +14,7 @@
   "REPO_FAILED_LOADING_FILE" : "Failed loading repository config file",
   "INSTALLATION_FAILED" : "Installation has failed...reason:",
   "CHART_INFO_INVALID" :  "Chart information is invalid.",
-  "REVERSION_NUMBER_INVALID" :  "Revision (version) number is invalid."
+  "REVERSION_NUMBER_INVALID" :  "Revision (version) number is invalid.",
+  "RELEASE_NOT_FOUND" :  "No release found with that name.",
+  "RELEASE_ALREADY_EXISTS" :  "Release already exists."
 }
