@@ -6,13 +6,25 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"go-api/common"
 	"helm.sh/helm/v3/cmd/helm/search"
+	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart"
+	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/helmpath"
 	"helm.sh/helm/v3/pkg/repo"
 	"path/filepath"
+	"strings"
 )
 
 // searchMaxScore suggests that any score higher than this is not considered a match.
 const searchMaxScore = 25
+
+var readmeFileNames = []string{"readme.md", "readme.txt", "readme"}
+
+type file struct {
+	Name string `json:"name"`
+	Data string `json:"data"`
+}
 
 type repoChartElement struct {
 	Name       string `json:"name"`
@@ -23,7 +35,7 @@ type repoChartElement struct {
 type repoChartList []repoChartElement
 
 // GetChartVersions
-// @Summary Get Chart sVersions
+// @Summary Get Chart Versions
 // @Tags Charts
 // @Accept json
 // @Produce json
@@ -64,6 +76,92 @@ func GetChartVersions(c *fiber.Ctx) error {
 	}
 
 	return common.RespOK(c, chartList)
+}
+
+// GetChartInfo
+// @Summary Get Chart Info
+// @Tags Charts
+// @Accept json
+// @Produce json
+// @Router /api/repositories/:repositories/charts/:charts/info [Get]
+func GetChartInfo(c *fiber.Ctx) error {
+	repoName := c.Params("repositories")
+	charts := c.Params("charts") // search keyword
+	version := c.Query("version")
+	info := c.Query("info") // all, readme, values, chart
+
+	if info == "" {
+		info = string(action.ShowAll)
+	}
+
+	actionConfig := new(action.Configuration)
+	client := action.NewShowWithConfig(action.ShowAll, actionConfig)
+	client.Version = version
+	if info == string(action.ShowChart) {
+		client.OutputFormat = action.ShowChart
+	} else if info == string(action.ShowReadme) {
+		client.OutputFormat = action.ShowReadme
+	} else if info == string(action.ShowValues) {
+		client.OutputFormat = action.ShowValues
+	} else if info == string(action.ShowAll) {
+		client.OutputFormat = action.ShowAll
+	} else {
+		return common.RespErr(c, fmt.Errorf("chart info only support readme/values/chart"))
+	}
+
+	aimChart := fmt.Sprintf("%s/%s", repoName, charts)
+	cp, err := client.ChartPathOptions.LocateChart(aimChart, settings)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	chrt, err := loader.Load(cp)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	if client.OutputFormat == action.ShowChart {
+		return common.RespOK(c, chrt.Metadata)
+	}
+	if client.OutputFormat == action.ShowValues {
+		var values string
+		for _, v := range chrt.Raw {
+			if v.Name == chartutil.ValuesfileName {
+				values = string(v.Data)
+				break
+			}
+		}
+		return common.RespOK(c, values)
+	}
+	if client.OutputFormat == action.ShowReadme {
+		return common.RespOK(c, string(findReadme(chrt.Files).Data))
+	}
+	if client.OutputFormat == action.ShowAll {
+		values := make([]*file, 0, len(chrt.Raw))
+		for _, v := range chrt.Raw {
+			values = append(values, &file{
+				Name: v.Name,
+				Data: string(v.Data),
+			})
+		}
+
+		return common.RespOK(c, values)
+	}
+	return common.RespOK(c, nil)
+}
+
+func findReadme(files []*chart.File) (file *chart.File) {
+	for _, file := range files {
+		for _, n := range readmeFileNames {
+			if file == nil {
+				continue
+			}
+			if strings.EqualFold(file.Name, n) {
+				return file
+			}
+		}
+	}
+	return nil
 }
 
 func buildSearchIndex(repoName string) (*search.Index, error) {
