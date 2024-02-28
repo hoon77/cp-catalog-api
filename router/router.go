@@ -36,4 +36,9 @@ func APIRoutes(app *fiber.App) {
 		releases.Get("/:release/resources", handler.GetReleaseResources)
 	}
 
+	charts := api.Group("/repositories/:repositories/charts/:charts")
+	{
+		charts.Get("/versions", handler.GetChartVersions)
+	}
+
 }
