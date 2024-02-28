@@ -12,8 +12,10 @@
   "REPO_NO_NAMED_FOUND" : "No repository found with that name",
   "REPO_UNABLE_UPDATE" : "Unable to get an update from the repository",
   "REPO_FAILED_LOADING_FILE" : "Failed loading repository config file",
+  "REPO_CORRUPT_MISSING" : "This repository is corrupt or missing. Please try updating the repository.",
   "INSTALLATION_FAILED" : "Installation has failed...reason:",
   "CHART_INFO_INVALID" :  "Chart information is invalid.",
+  "CHART_VERSION_INVALID" :  "Invalid version/constraint format",
   "REVERSION_NUMBER_INVALID" :  "Revision (version) number is invalid.",
   "RELEASE_NOT_FOUND" :  "No release found with that name.",
   "RELEASE_ALREADY_EXISTS" :  "Release already exists."

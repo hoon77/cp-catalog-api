@@ -6,7 +6,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"go-api/common"
 	"helm.sh/helm/v3/cmd/helm/search"
+	"helm.sh/helm/v3/pkg/helmpath"
 	"helm.sh/helm/v3/pkg/repo"
+	"path/filepath"
 )
 
 // searchMaxScore suggests that any score higher than this is not considered a match.
@@ -66,12 +68,10 @@ func GetChartVersions(c *fiber.Ctx) error {
 
 func buildSearchIndex(repoName string) (*search.Index, error) {
 	index := search.NewIndex()
-
-	path := fmt.Sprintf("%s/%s-index.yaml", settings.RepositoryCache, repoName)
-	fmt.Println("path:", path)
+	path := filepath.Join(settings.RepositoryCache, helmpath.CacheIndexFile(repoName))
 	indexFile, err := repo.LoadIndexFile(path)
 	if err != nil {
-		return nil, fmt.Errorf("레파지토리가 존재하지 않습니다.", repoName)
+		return nil, fmt.Errorf(common.REPO_CORRUPT_MISSING)
 	}
 
 	index.AddRepo(repoName, indexFile, true)
@@ -85,7 +85,7 @@ func applyConstraint(version string, versions bool, res []*search.Result) ([]*se
 
 	constraint, err := semver.NewConstraint(version)
 	if err != nil {
-		return res, fmt.Errorf("an invalid version/constraint format")
+		return res, fmt.Errorf(common.CHART_VERSION_INVALID)
 	}
 
 	data := res[:0]
