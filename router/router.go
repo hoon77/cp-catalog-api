@@ -11,7 +11,8 @@ func APIRoutes(app *fiber.App) {
 	// repositories
 	repositories := api.Group("/repositories")
 	{
-		repositories.Post("", handler.AddRepos)
+		repositories.Post("", handler.AddRepo)
+		repositories.Delete("/:repositories", handler.RemoveRepo)
 		repositories.Get("", handler.ListRepos)
 	}
 
