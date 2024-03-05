@@ -11,9 +11,15 @@ func APIRoutes(app *fiber.App) {
 	// repositories
 	repositories := api.Group("/repositories")
 	{
-		repositories.Post("", handler.AddRepo)
-		repositories.Delete("/:repositories", handler.RemoveRepo)
+		// helm repo list
 		repositories.Get("", handler.ListRepos)
+		// helm repo add
+		repositories.Post("", handler.AddRepo)
+		// helm repo remove
+		repositories.Delete("/:repositories", handler.RemoveRepo)
+		// helm repo update
+		repositories.Put("/:repositories", handler.UpdateRepo)
+
 	}
 
 	// releases
