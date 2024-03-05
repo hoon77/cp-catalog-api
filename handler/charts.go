@@ -31,6 +31,7 @@ type repoChartElement struct {
 	Version     string `json:"version"`
 	AppVersion  string `json:"app_version"`
 	Description string `json:"description"`
+	Icon        string `json:"icon"`
 }
 
 type repoChartList []repoChartElement

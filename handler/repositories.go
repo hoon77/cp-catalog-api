@@ -142,6 +142,7 @@ func ListRepoCharts(c *fiber.Ctx) error {
 			Version:     v.Chart.Version,
 			AppVersion:  v.Chart.AppVersion,
 			Description: v.Chart.Description,
+			Icon:        v.Chart.Icon,
 		})
 	}
 
