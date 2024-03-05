@@ -27,9 +27,10 @@ type file struct {
 }
 
 type repoChartElement struct {
-	Name       string `json:"name"`
-	Version    string `json:"version"`
-	AppVersion string `json:"app_version"`
+	Name        string `json:"name"`
+	Version     string `json:"version"`
+	AppVersion  string `json:"app_version"`
+	Description string `json:"description"`
 }
 
 type repoChartList []repoChartElement

@@ -3,14 +3,15 @@ package handler
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/pkg/errors"
 	"go-api/common"
+	"helm.sh/helm/v3/cmd/helm/search"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/helmpath"
 	"helm.sh/helm/v3/pkg/repo"
 	"os"
 	"path/filepath"
-	"sync"
 )
 
 type repositoryElement struct {
@@ -89,12 +90,6 @@ func RemoveRepo(c *fiber.Ctx) error {
 // @Produce json
 // @Router /api/repositories/:repositories [Put]
 func UpdateRepo(c *fiber.Ctx) error {
-	type ErrMsg struct {
-		Err string
-	}
-
-	errUpdateRepo := []ErrMsg{}
-
 	repoName := c.Params("repositories")
 	repoFile, err := repo.LoadFile(settings.RepositoryConfig)
 	if err != nil {
@@ -103,38 +98,62 @@ func UpdateRepo(c *fiber.Ctx) error {
 	if !repoFile.Has(repoName) {
 		return common.RespErr(c, fmt.Errorf(common.REPO_NO_NAMED_FOUND))
 	}
+
 	updateRepo := repoFile.Get(repoName)
-
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-	go func(re *repo.Entry) {
-		defer wg.Done()
-		err := updateChart(re)
-		if err != nil {
-			errUpdateRepo = append(errUpdateRepo, ErrMsg{
-				Err: err.Error(),
-			})
-		}
-
-	}(updateRepo)
-
-	wg.Wait()
-
-	if len(errUpdateRepo) > 0 {
+	err = updateChart(updateRepo)
+	if err != nil {
+		log.Errorf("Failed to update repo.. %s", err.Error())
 		return common.RespErr(c, fmt.Errorf(common.REPO_UNABLE_UPDATE))
 	}
 
 	return common.RespOK(c, nil)
 }
 
-func updateChart(c *repo.Entry) error {
-	r, err := repo.NewChartRepository(c, getter.All(settings))
+// ListRepoCharts
+// @Summary List Repository Charts
+// @Tags Repository
+// @Accept json
+// @Produce json
+// @Router /api/repositories/:repositories/charts [Get]
+func ListRepoCharts(c *fiber.Ctx) error {
+	repoName := c.Params("repositories")
+	version := ">0.0.0"
+	index, err := buildSearchIndex(repoName)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	var res []*search.Result
+	res, err = index.Search(fmt.Sprintf("%s/", repoName), searchMaxScore, false)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	search.SortScore(res)
+	data, err := applyConstraint(version, false, res)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	chartList := make(repoChartList, 0, len(data))
+	for _, v := range data {
+		chartList = append(chartList, repoChartElement{
+			Name:        v.Name,
+			Version:     v.Chart.Version,
+			AppVersion:  v.Chart.AppVersion,
+			Description: v.Chart.Description,
+		})
+	}
+
+	return common.RespOK(c, chartList)
+}
+
+func updateChart(repoEntry *repo.Entry) error {
+	chartRepository, err := repo.NewChartRepository(repoEntry, getter.All(settings))
 	if err != nil {
 		return err
 	}
-	_, err = r.DownloadIndexFile()
-	if err != nil {
+	if _, err := chartRepository.DownloadIndexFile(); err != nil {
 		return err
 	}
 
