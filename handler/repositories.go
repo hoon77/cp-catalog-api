@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"encoding/base64"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/pkg/errors"
 	"go-api/common"
+	"go-api/config"
 	"helm.sh/helm/v3/cmd/helm/search"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/helmpath"
@@ -19,18 +21,34 @@ type repositoryElement struct {
 	URL  string `json:"url"`
 }
 
+type addRepositoryElement struct {
+	Name     string `json:"name"`
+	URL      string `json:"url"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	CaBase64 string `json:"ca_base64"`
+}
+
 // AddRepo
 // @Summary Add Repository
 // @Tags Repository
 // @Accept json
 // @Produce json
-// @Router /api/repositories [Post]
+// @Router /api/repositories/:repositories [Post]
 func AddRepo(c *fiber.Ctx) error {
+	repoName := c.Params("repositories")
+	newRepo := new(addRepositoryElement)
+	if err := c.BodyParser(newRepo); err != nil {
+		return common.RespErr(c, err)
+	}
 
-	return c.JSON(fiber.Map{
-		"message": "success",
-		"data":    "this is test",
-	})
+	newRepo.Name = repoName
+	err := saveRepoCaFile(newRepo.Name, newRepo.CaBase64)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	return common.RespOK(c, nil)
 }
 
 // ListRepos
@@ -174,4 +192,20 @@ func removeRepoCache(root, name string) error {
 		return errors.Wrapf(err, "can't remove index file %s", idx)
 	}
 	return os.Remove(idx)
+}
+
+func saveRepoCaFile(repoName string, base64CA string) error {
+	// decode CA
+	origCA, err := base64.StdEncoding.DecodeString(base64CA)
+	if err != nil {
+		return fmt.Errorf(common.REPO_CA_INVALID)
+	}
+	caFileName := fmt.Sprintf("%s%s.crt", config.Env.RepoCertPath, repoName)
+	fmt.Println(caFileName)
+	err = os.WriteFile(caFileName, origCA, 0644)
+	if err != nil {
+		return fmt.Errorf(common.REPO_CA_FAILED_SAVE)
+	}
+
+	return nil
 }

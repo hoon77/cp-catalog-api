@@ -19,8 +19,8 @@ var (
 )
 
 func Settings() {
-	settings.RepositoryConfig = config.Env.RepoConfig
-	settings.RepositoryCache = config.Env.RepoCache
+	settings.RepositoryConfig = config.Env.HelmRepoConfig
+	settings.RepositoryCache = config.Env.HelmRepoCache
 }
 
 func GetResources(out string) []*v1.Carp {

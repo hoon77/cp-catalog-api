@@ -12,13 +12,14 @@ func InitEnvConfigs() {
 }
 
 type envConfigs struct {
-	ServerPort   string `mapstructure:"SERVER_PORT"`
-	AuthUserName string `mapstructure:"AUTH_USERNAME"`
-	AuthPassword string `mapstructure:"AUTH_PASSWORD"`
-	K8sApiServer string `mapstructure:"K8S_API_SERVER"`
-	K8sToken     string `mapstructure:"K8S_TOKEN"`
-	RepoConfig   string `mapstructure:"REPO_CONFIG"`
-	RepoCache    string `mapstructure:"REPO_CACHE"`
+	ServerPort     string `mapstructure:"SERVER_PORT"`
+	AuthUserName   string `mapstructure:"AUTH_USERNAME"`
+	AuthPassword   string `mapstructure:"AUTH_PASSWORD"`
+	K8sApiServer   string `mapstructure:"K8S_API_SERVER"`
+	K8sToken       string `mapstructure:"K8S_TOKEN"`
+	HelmRepoConfig string `mapstructure:"HELM_REPO_CONFIG"`
+	HelmRepoCache  string `mapstructure:"HELM_REPO_CACHE"`
+	RepoCertPath   string `mapstructure:"REPO_CERT_PATH"`
 }
 
 func loadEnvVariables() (config *envConfigs) {

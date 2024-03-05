@@ -13,6 +13,8 @@
   "REPO_UNABLE_UPDATE" : "Failed to update the repository.",
   "REPO_FAILED_LOADING_FILE" : "Failed loading repository config file.",
   "REPO_CORRUPT_MISSING" : "This repository is corrupt or missing. Please try updating the repository.",
+  "REPO_CA_INVALID" : "The certificate is invalid.",
+  "REPO_CA_FAILED_SAVE" : "Failed to save certificate file.",
   "INSTALLATION_FAILED" : "Installation has failed...reason:",
   "CHART_INFO_INVALID" :  "Chart information is invalid.",
   "CHART_VERSION_INVALID" :  "Invalid version/constraint format",
