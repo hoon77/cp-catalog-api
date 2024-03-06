@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
+	"github.com/gofrs/flock"
 	"github.com/pkg/errors"
 	"go-api/common"
 	"go-api/config"
@@ -14,7 +16,15 @@ import (
 	"helm.sh/helm/v3/pkg/repo"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 )
+
+// Repositories that have been permanently deleted and no longer work
+var deprecatedRepos = map[string]string{
+	"//kubernetes-charts.storage.googleapis.com":           "https://charts.helm.sh/stable",
+	"//kubernetes-charts-incubator.storage.googleapis.com": "https://charts.helm.sh/incubator",
+}
 
 type repositoryElement struct {
 	Name string `json:"name"`
@@ -29,6 +39,26 @@ type addRepositoryElement struct {
 	CaBase64 string `json:"ca_base64"`
 }
 
+func addRepoVaildCheck(newRepo *addRepositoryElement) error {
+	if newRepo.Name == "" || newRepo.URL == "" {
+		return fmt.Errorf(common.REPO_NAME_URL_REQUIRED)
+	}
+	if strings.Contains(newRepo.Name, "/") {
+		return fmt.Errorf(common.REPO_NAME_CONTAINS_SC)
+	}
+	// Block deprecated repos
+	for oldURL, newURL := range deprecatedRepos {
+		if strings.Contains(newRepo.URL, oldURL) {
+			return fmt.Errorf("repo %q is no longer available; try %q instead", newRepo.URL, newURL)
+		}
+	}
+
+	if (newRepo.Username != "" && newRepo.Password == "") || (newRepo.Username == "" && newRepo.Password != "") {
+		return errors.New(common.REPO_USERNAME_PASSWD_REQUIRED)
+	}
+	return nil
+}
+
 // AddRepo
 // @Summary Add Repository
 // @Tags Repository
@@ -36,16 +66,64 @@ type addRepositoryElement struct {
 // @Produce json
 // @Router /api/repositories/:repositories [Post]
 func AddRepo(c *fiber.Ctx) error {
-	repoName := c.Params("repositories")
+	repoFile := settings.RepositoryConfig
 	newRepo := new(addRepositoryElement)
 	if err := c.BodyParser(newRepo); err != nil {
 		return common.RespErr(c, err)
 	}
+	newRepo.Name = c.Params("repositories")
 
-	newRepo.Name = repoName
-	err := saveRepoCaFile(newRepo.Name, newRepo.CaBase64)
+	if err := addRepoVaildCheck(newRepo); err != nil {
+		return err
+	}
+
+	// Ensure the file directory exists as it is required for file locking
+	err := os.MkdirAll(filepath.Dir(repoFile), os.ModePerm)
+	if err != nil && !os.IsExist(err) {
+		return err
+	}
+
+	if err := syncRepoLock(repoFile); err != nil {
+		return err
+	}
+
+	f, err := repo.LoadFile(repoFile)
+	if err != nil {
+		return common.RespErr(c, fmt.Errorf(common.REPO_FAILED_LOADING_FILE))
+	}
+
+	repoEntry := repo.Entry{
+		Name:                  newRepo.Name,
+		URL:                   newRepo.URL,
+		Username:              newRepo.Username,
+		Password:              newRepo.Password,
+		CAFile:                "",
+		InsecureSkipTLSverify: false,
+	}
+
+	if f.Has(newRepo.Name) {
+		existing := f.Get(newRepo.Name)
+		if repoEntry != *existing {
+			return common.RespErr(c, errors.Errorf(common.REPO_NAME_ALREADY_EXISTS))
+		}
+
+		// The add is idempotent so do nothing
+		return common.RespErr(c, errors.Errorf(common.REPO_SAME_CONF_ALREADY_EXISTS))
+	}
+
+	r, err := repo.NewChartRepository(&repoEntry, getter.All(settings))
 	if err != nil {
 		return common.RespErr(c, err)
+	}
+
+	if _, err := r.DownloadIndexFile(); err != nil {
+		return common.RespErr(c, err)
+	}
+
+	f.Update(&repoEntry)
+
+	if err := f.WriteFile(repoFile, 0600); err != nil {
+		return err
 	}
 
 	return common.RespOK(c, nil)
@@ -165,6 +243,29 @@ func ListRepoCharts(c *fiber.Ctx) error {
 	}
 
 	return common.RespOK(c, chartList)
+}
+
+func syncRepoLock(repoFile string) error {
+	// Acquire a file lock for process synchronization
+	repoFileExt := filepath.Ext(repoFile)
+	var lockPath string
+	if len(repoFileExt) > 0 && len(repoFileExt) < len(repoFile) {
+		lockPath = strings.TrimSuffix(repoFile, repoFileExt) + ".lock"
+	} else {
+		lockPath = repoFile + ".lock"
+	}
+	fileLock := flock.New(lockPath)
+	lockCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	locked, err := fileLock.TryLockContext(lockCtx, time.Second)
+	if err == nil && locked {
+		defer fileLock.Unlock()
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func updateChart(repoEntry *repo.Entry) error {
