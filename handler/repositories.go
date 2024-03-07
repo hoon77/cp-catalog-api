@@ -100,18 +100,10 @@ func AddRepo(c *fiber.Ctx) error {
 		Password: newRepo.Password,
 	}
 
-	if f.Has(newRepo.Name) {
-		existing := f.Get(newRepo.Name)
-		if repoEntry != *existing {
-			return common.RespErr(c, errors.Errorf(common.REPO_NAME_ALREADY_EXISTS))
-		}
-		// The add is idempotent so do nothing
-		return common.RespErr(c, errors.Errorf(common.REPO_SAME_CONF_ALREADY_EXISTS))
-	}
-
 	// save ca.crt
-	caFilePath := fmt.Sprintf("%s%s.crt", config.Env.RepoCertPath, newRepo.Name)
+	caFilePath := ""
 	if len(newRepo.CaBase64) > 0 {
+		caFilePath = fmt.Sprintf("%s%s.crt", config.Env.RepoCertPath, newRepo.Name)
 		if err := os.MkdirAll(config.Env.RepoCertPath, os.ModePerm); err != nil && !os.IsExist(err) {
 			return common.RespErr(c, err)
 		}
@@ -121,13 +113,23 @@ func AddRepo(c *fiber.Ctx) error {
 		repoEntry.CAFile = caFilePath
 	}
 
+	if f.Has(newRepo.Name) {
+		existing := f.Get(newRepo.Name)
+		if repoEntry != *existing {
+			return common.RespErr(c, errors.Errorf(common.REPO_NAME_ALREADY_EXISTS))
+		}
+		// The add is idempotent so do nothing
+		return common.RespErr(c, errors.Errorf(common.REPO_SAME_CONF_ALREADY_EXISTS))
+	}
+
 	r, err := repo.NewChartRepository(&repoEntry, getter.All(settings))
 	if err != nil {
 		return common.RespErr(c, err)
 	}
 
 	if _, err := r.DownloadIndexFile(); err != nil {
-		return common.RespErr(c, errors.Errorf(common.REPO_CANNOT_BE_REACHED))
+		fmt.Println("error occur here....", err)
+		return common.RespErr(c, err)
 	}
 
 	f.Update(&repoEntry)
@@ -305,6 +307,9 @@ func removeRepoCache(root, name string) error {
 }
 
 func saveRepoCaFile(caFilePath string, base64CA string) error {
+	if FileExists(caFilePath) {
+		return fmt.Errorf(common.REPO_CA_ALREADY_EXISTS)
+	}
 	// decode CA
 	origCA, err := base64.StdEncoding.DecodeString(base64CA)
 	if err != nil {

@@ -10,6 +10,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	v1 "k8s.io/apimachinery/pkg/apis/testapigroup/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
+	"os"
 	sigyaml "sigs.k8s.io/yaml"
 	"strings"
 )
@@ -84,4 +85,21 @@ func ConvertYAML(results map[string]interface{}) string {
 		return common.EMPTY_STR
 	}
 	return string(obj)
+}
+
+func FileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
+}
+
+func RemoveFile(filename string) error {
+	err := os.Remove(filename)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
