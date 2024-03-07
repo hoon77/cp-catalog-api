@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"go-api/config"
+	_ "go-api/docs"
 	"go-api/handler"
 	"go-api/middleware"
 	"go-api/router"
