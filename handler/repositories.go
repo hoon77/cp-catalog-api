@@ -83,6 +83,7 @@ func AddRepo(c *fiber.Ctx) error {
 		return err
 	}
 
+	// Acquire a file lock for process synchronization
 	if err := syncRepoLock(repoFile); err != nil {
 		return err
 	}
@@ -93,12 +94,10 @@ func AddRepo(c *fiber.Ctx) error {
 	}
 
 	repoEntry := repo.Entry{
-		Name:                  newRepo.Name,
-		URL:                   newRepo.URL,
-		Username:              newRepo.Username,
-		Password:              newRepo.Password,
-		CAFile:                "",
-		InsecureSkipTLSverify: false,
+		Name:     newRepo.Name,
+		URL:      newRepo.URL,
+		Username: newRepo.Username,
+		Password: newRepo.Password,
 	}
 
 	if f.Has(newRepo.Name) {
@@ -106,9 +105,20 @@ func AddRepo(c *fiber.Ctx) error {
 		if repoEntry != *existing {
 			return common.RespErr(c, errors.Errorf(common.REPO_NAME_ALREADY_EXISTS))
 		}
-
 		// The add is idempotent so do nothing
 		return common.RespErr(c, errors.Errorf(common.REPO_SAME_CONF_ALREADY_EXISTS))
+	}
+
+	// save ca.crt
+	caFilePath := fmt.Sprintf("%s%s.crt", config.Env.RepoCertPath, newRepo.Name)
+	if len(newRepo.CaBase64) > 0 {
+		if err := os.MkdirAll(config.Env.RepoCertPath, os.ModePerm); err != nil && !os.IsExist(err) {
+			return common.RespErr(c, err)
+		}
+		if err := saveRepoCaFile(caFilePath, newRepo.CaBase64); err != nil {
+			return common.RespErr(c, err)
+		}
+		repoEntry.CAFile = caFilePath
 	}
 
 	r, err := repo.NewChartRepository(&repoEntry, getter.All(settings))
@@ -117,7 +127,7 @@ func AddRepo(c *fiber.Ctx) error {
 	}
 
 	if _, err := r.DownloadIndexFile(); err != nil {
-		return common.RespErr(c, err)
+		return common.RespErr(c, errors.Errorf(common.REPO_CANNOT_BE_REACHED))
 	}
 
 	f.Update(&repoEntry)
@@ -246,7 +256,6 @@ func ListRepoCharts(c *fiber.Ctx) error {
 }
 
 func syncRepoLock(repoFile string) error {
-	// Acquire a file lock for process synchronization
 	repoFileExt := filepath.Ext(repoFile)
 	var lockPath string
 	if len(repoFileExt) > 0 && len(repoFileExt) < len(repoFile) {
@@ -295,15 +304,13 @@ func removeRepoCache(root, name string) error {
 	return os.Remove(idx)
 }
 
-func saveRepoCaFile(repoName string, base64CA string) error {
+func saveRepoCaFile(caFilePath string, base64CA string) error {
 	// decode CA
 	origCA, err := base64.StdEncoding.DecodeString(base64CA)
 	if err != nil {
 		return fmt.Errorf(common.REPO_CA_INVALID)
 	}
-	caFileName := fmt.Sprintf("%s%s.crt", config.Env.RepoCertPath, repoName)
-	fmt.Println(caFileName)
-	err = os.WriteFile(caFileName, origCA, 0644)
+	err = os.WriteFile(caFilePath, origCA, 0644)
 	if err != nil {
 		return fmt.Errorf(common.REPO_CA_FAILED_SAVE)
 	}

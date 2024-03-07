@@ -7,7 +7,7 @@
   "REPO_NAME_ALREADY_EXISTS" : "Repository 명이 이미 존재합니다. 다른 이름을 지정하십시오",
   "REPO_USERNAME_PASSWD_REQUIRED" : "인증을 사용하여 Repository를 추가하려면 Username, Password 값이 모두 필요합니다",
   "REPO_SAME_CONF_ALREADY_EXISTS" : "동일한 Repository 구성이 이미 존재합니다.",
-  "REPO_CANNOT_BE_REACHED" : "올바른 Repository가 아니거나 연결할 수 없습니다.. 세부사항",
+  "REPO_CANNOT_BE_REACHED" : "올바른 Repository가 아니거나 연결할 수 없습니다.",
   "REPO_NO_CONFIGURED" : "구성된 Repository가 없습니다.",
   "REPO_NO_NAMED_FOUND" : "해당 이름의 Repository를 찾을 수 없습니다.",
   "REPO_UNABLE_UPDATE" : "해당 Repository 업데이트를 실패했습니다.",

@@ -7,7 +7,7 @@
   "REPO_NAME_ALREADY_EXISTS" : "Repository name already exists, please specify a different name",
   "REPO_USERNAME_PASSWD_REQUIRED" : "Username and Password, both are required to add the repository with authentication",
   "REPO_SAME_CONF_ALREADY_EXISTS" : "Already exists with the same configuration",
-  "REPO_CANNOT_BE_REACHED" : "Not a valid chart repository or cannot be reached..reason",
+  "REPO_CANNOT_BE_REACHED" : "Not a valid chart repository or cannot be reached.",
   "REPO_NO_CONFIGURED" : "No repositories configured.",
   "REPO_NO_NAMED_FOUND" : "No repository found with that name.",
   "REPO_UNABLE_UPDATE" : "Failed to update the repository.",
