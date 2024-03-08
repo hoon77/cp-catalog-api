@@ -154,16 +154,22 @@ func AddRepo(c *fiber.Ctx) error {
 // @Produce json
 // @Router /api/repositories [Get]
 func ListRepos(c *fiber.Ctx) error {
+	lse, err := ListSearchCheck(c)
+	if err != nil {
+		return err
+	}
+
 	repositories, err := repo.LoadFile(settings.RepositoryConfig)
 	if err != nil {
 		return common.RespErr(c, err)
 	}
 
-	repos := make([]repositoryElement, 0, len(repositories.Repositories))
+	repos := make([]interface{}, 0, len(repositories.Repositories))
 	for _, re := range repositories.Repositories {
 		repos = append(repos, repositoryElement{Name: re.Name, URL: re.URL})
 	}
-	return common.RespOK(c, repos)
+
+	return common.RespOK(c, ResourceListProcessing(repos, lse))
 }
 
 // RemoveRepo

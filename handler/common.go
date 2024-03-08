@@ -2,6 +2,8 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"go-api/common"
 	"go-api/config"
@@ -12,12 +14,18 @@ import (
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"os"
 	sigyaml "sigs.k8s.io/yaml"
+	"strconv"
 	"strings"
 )
 
 var (
 	settings = cli.New()
 )
+
+type ListSearchElement struct {
+	Offset int
+	Limit  int
+}
 
 func Settings() {
 	settings.RepositoryConfig = config.Env.HelmRepoConfig
@@ -102,4 +110,52 @@ func RemoveFile(filename string) error {
 	}
 
 	return nil
+}
+
+func ListSearchCheck(c *fiber.Ctx) (*ListSearchElement, error) {
+	offset, err := strconv.Atoi(c.Query("offset"))
+	if err != nil {
+		offset = common.DEFAULT_OFFSET
+	}
+	limit, err := strconv.Atoi(c.Query("limit"))
+	if err != nil {
+		limit = common.DEFAULT_LIMIT
+	}
+
+	if limit < 0 {
+		return nil, fmt.Errorf(common.LIMIT_ILLEGAL_ARGUMENT)
+	}
+	if offset < 0 {
+		return nil, fmt.Errorf(common.OFFSET_ILLEGAL_ARGUMENT)
+	}
+
+	if offset > 0 && limit == 0 {
+		return nil, fmt.Errorf(common.OFFSET_REQUIRES_LIMIT_ILLEGAL_ARGUMENT)
+	}
+
+	lse := ListSearchElement{
+		Offset: offset,
+		Limit:  limit,
+	}
+
+	return &lse, nil
+}
+
+func ResourceListProcessing(list []interface{}, lse *ListSearchElement) []interface{} {
+	allCounts := len(list)
+	fmt.Println("lse:", lse)
+
+	start := lse.Offset * lse.Limit
+
+	fmt.Println("allCounts:", allCounts)
+	fmt.Println("start:", start)
+
+	if start > allCounts {
+		return make([]interface{}, 0)
+	}
+	if (start + lse.Limit) > allCounts {
+		return list[start:]
+	}
+
+	return list[start : start+lse.Limit]
 }

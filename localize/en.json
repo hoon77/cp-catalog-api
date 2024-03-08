@@ -1,5 +1,8 @@
 {
   "OK": "Processed successfully.",
+  "LIMIT_ILLEGAL_ARGUMENT" : "Limit (maximum number of resources to import on a page) must be at least zero. limit >=0",
+  "OFFSET_ILLEGAL_ARGUMENT" : "Offset must be at least zero. offset >=0",
+  "OFFSET_REQUIRES_LIMIT_ILLEGAL_ARGUMENT" : "When using offset, a limit value is required.",
   "FAILED_TO_READ_CLUSTER_DATA": "Failed to read cluster data",
   "FAILED_TO_PARSE_VALUES": "Failed to parse values. Check the values format again",
   "REPO_NAME_URL_REQUIRED" :"Name and URL are required to add the repository",
