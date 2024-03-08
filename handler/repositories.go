@@ -128,7 +128,13 @@ func AddRepo(c *fiber.Ctx) error {
 	}
 
 	if _, err := r.DownloadIndexFile(); err != nil {
-		fmt.Println("error occur here....", err)
+		log.Errorf("error :  %s", err.Error())
+		fmt.Println("caFilePath:", caFilePath)
+		if len(caFilePath) > 0 {
+			log.Info("Delete certificate due to failed add repository..", caFilePath)
+			_ = RemoveFile(caFilePath)
+		}
+
 		return common.RespErr(c, err)
 	}
 
@@ -176,6 +182,7 @@ func RemoveRepo(c *fiber.Ctx) error {
 	if !repoFile.Has(repoName) {
 		return common.RespErr(c, fmt.Errorf(common.REPO_NO_NAMED_FOUND))
 	}
+	removeRepo := repoFile.Get(repoName)
 
 	if !repoFile.Remove(repoName) {
 		return common.RespErr(c, err)
@@ -188,6 +195,13 @@ func RemoveRepo(c *fiber.Ctx) error {
 	if err := removeRepoCache(settings.RepositoryCache, repoName); err != nil {
 		return common.RespErr(c, err)
 	}
+
+	if len(removeRepo.CAFile) > 0 {
+		// delete ca.crt
+		log.Info("Delete certificate due to remove repository..", removeRepo.CAFile)
+		_ = RemoveFile(removeRepo.CAFile)
+	}
+
 	return common.RespOK(c, nil)
 }
 

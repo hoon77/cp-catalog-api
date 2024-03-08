@@ -27,7 +27,7 @@ func RespOK(c *fiber.Ctx, data interface{}) error {
 }
 
 func RespErr(c *fiber.Ctx, err error) error {
-	log.Errorf("[Error Reason] : %s", err.Error())
+	log.Errorf("%s", err.Error())
 	resultStatus := ResultStatus{
 		ResultCode:     RESULT_STATUS_FAIL,
 		ResultMessage:  localize(c, err.Error()),
