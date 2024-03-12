@@ -141,21 +141,35 @@ func ListSearchCheck(c *fiber.Ctx) (*ListSearchElement, error) {
 	return &lse, nil
 }
 
-func ResourceListProcessing(list []interface{}, lse *ListSearchElement) []interface{} {
-	allCounts := len(list)
+func ResourceListProcessing(list []interface{}, lse *ListSearchElement) (common.ListCount, []interface{}) {
 	fmt.Println("lse:", lse)
 
+	allItemCount := len(list)
+	remainingItemCount := allItemCount - ((lse.Offset + 1) * lse.Limit)
 	start := lse.Offset * lse.Limit
 
-	fmt.Println("allCounts:", allCounts)
+	fmt.Println("allItemCount:", allItemCount)
+	fmt.Println("remainingItemCount:", remainingItemCount)
 	fmt.Println("start:", start)
 
-	if start > allCounts {
-		return make([]interface{}, 0)
-	}
-	if (start + lse.Limit) > allCounts {
-		return list[start:]
+	if lse.Limit == 0 || remainingItemCount < 0 {
+		remainingItemCount = 0
 	}
 
-	return list[start : start+lse.Limit]
+	listCount := common.ListCount{
+		AllItemCount:       allItemCount,
+		RemainingItemCount: remainingItemCount,
+	}
+
+	if lse.Limit == 0 {
+		return listCount, list
+	}
+	if start > allItemCount {
+		return listCount, make([]interface{}, 0)
+	}
+	if (start + lse.Limit) > allItemCount {
+		return listCount, list[start:]
+	}
+
+	return listCount, list[start : start+lse.Limit]
 }

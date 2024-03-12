@@ -14,6 +14,20 @@ type ResultStatus struct {
 	Items          interface{} `json:"items"`
 }
 
+type ListResultStatus struct {
+	ResultCode     string      `json:"resultCode"`
+	ResultMessage  string      `json:"resultMessage"`
+	HttpStatusCode int         `json:"httpStatusCode"`
+	DetailMessage  string      `json:"detailMessage"`
+	ItemMetaData   ListCount   `json:"itemMetaData"`
+	Items          interface{} `json:"items"`
+}
+
+type ListCount struct {
+	AllItemCount       int `json:"allItemCount"`
+	RemainingItemCount int `json:"remainingItemCount"`
+}
+
 func RespOK(c *fiber.Ctx, data interface{}) error {
 	resultStatus := ResultStatus{
 		ResultCode:     RESULT_STATUS_SUCCESS,
@@ -23,6 +37,19 @@ func RespOK(c *fiber.Ctx, data interface{}) error {
 		Items:          data,
 	}
 	return c.Status(200).JSON(resultStatus)
+
+}
+
+func ListRespOK(c *fiber.Ctx, listCount ListCount, data interface{}) error {
+	listResultStatus := ListResultStatus{
+		ResultCode:     RESULT_STATUS_SUCCESS,
+		ResultMessage:  localize(c, "OK"),
+		HttpStatusCode: 0,
+		DetailMessage:  localize(c, "OK"),
+		ItemMetaData:   listCount,
+		Items:          data,
+	}
+	return c.Status(200).JSON(listResultStatus)
 
 }
 

@@ -156,7 +156,7 @@ func AddRepo(c *fiber.Ctx) error {
 func ListRepos(c *fiber.Ctx) error {
 	lse, err := ListSearchCheck(c)
 	if err != nil {
-		return err
+		return common.RespErr(c, err)
 	}
 
 	repositories, err := repo.LoadFile(settings.RepositoryConfig)
@@ -169,7 +169,8 @@ func ListRepos(c *fiber.Ctx) error {
 		repos = append(repos, repositoryElement{Name: re.Name, URL: re.URL})
 	}
 
-	return common.RespOK(c, ResourceListProcessing(repos, lse))
+	count, data := ResourceListProcessing(repos, lse)
+	return common.ListRespOK(c, count, data)
 }
 
 // RemoveRepo
