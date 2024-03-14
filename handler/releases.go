@@ -55,6 +55,11 @@ type releaseHistory []releaseInfo
 // @Produce json
 // @Router /api/clusters/:clusterId/namespaces/:namespace/releases [Get]
 func ListReleases(c *fiber.Ctx) error {
+	lse, err := ListSearchCheck(c)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
 	actionConfig, err := common.ActionConfigInit(c)
 	if err != nil {
 		return common.RespErr(c, err)
@@ -62,16 +67,19 @@ func ListReleases(c *fiber.Ctx) error {
 
 	client := action.NewList(actionConfig)
 	client.Deployed = true
+	client.SortReverse = true
 	results, err := client.Run()
 	if err != nil {
 		return common.RespErr(c, err)
 	}
 
-	elements := make([]releaseElement, 0, len(results))
+	elements := make([]interface{}, 0, len(results))
 	for _, r := range results {
 		elements = append(elements, constructReleaseElement(r, false))
 	}
-	return common.RespOK(c, elements)
+
+	itemCount, resultData := ResourceListProcessing(elements, lse)
+	return common.ListRespOK(c, itemCount, resultData)
 }
 
 // GetReleaseInfo

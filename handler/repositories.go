@@ -169,8 +169,8 @@ func ListRepos(c *fiber.Ctx) error {
 		repos = append(repos, repositoryElement{Name: re.Name, URL: re.URL})
 	}
 
-	count, data := ResourceListProcessing(repos, lse)
-	return common.ListRespOK(c, count, data)
+	itemCount, resultData := ResourceListProcessing(repos, lse)
+	return common.ListRespOK(c, itemCount, resultData)
 }
 
 // RemoveRepo
@@ -245,6 +245,11 @@ func UpdateRepo(c *fiber.Ctx) error {
 // @Produce json
 // @Router /api/repositories/:repositories/charts [Get]
 func ListRepoCharts(c *fiber.Ctx) error {
+	lse, err := ListSearchCheck(c)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
 	repoName := c.Params("repositories")
 	version := ">0.0.0"
 	index, err := buildSearchIndex(repoName)
@@ -253,21 +258,17 @@ func ListRepoCharts(c *fiber.Ctx) error {
 	}
 
 	var res []*search.Result
-	res, err = index.Search(fmt.Sprintf("%s/", repoName), searchMaxScore, false)
-	if err != nil {
-		return common.RespErr(c, err)
-	}
-
+	res = index.All()
 	search.SortScore(res)
 	data, err := applyConstraint(version, false, res)
 	if err != nil {
 		return common.RespErr(c, err)
 	}
 
-	chartList := make(repoChartList, 0, len(data))
+	chartList := make([]interface{}, 0, len(data))
 	for _, v := range data {
 		chartList = append(chartList, repoChartElement{
-			Name:        v.Name,
+			Name:        strings.Replace(v.Chart.Name, repoName+"/", "", 1),
 			Version:     v.Chart.Version,
 			AppVersion:  v.Chart.AppVersion,
 			Description: v.Chart.Description,
@@ -275,7 +276,8 @@ func ListRepoCharts(c *fiber.Ctx) error {
 		})
 	}
 
-	return common.RespOK(c, chartList)
+	itemCount, resultData := ResourceListProcessing(chartList, lse)
+	return common.ListRespOK(c, itemCount, resultData)
 }
 
 func syncRepoLock(repoFile string) error {
