@@ -145,19 +145,15 @@ func ListSearchCheck(c *fiber.Ctx) (*ListSearchElement, error) {
 }
 
 func ResourceListProcessing(list []interface{}, lse *ListSearchElement) (common.ListCount, []interface{}) {
-	fmt.Println("lse:", lse)
-
+	// 1. search keyword
 	if lse.SearchName != "" {
 		list = searchResourceName(list, lse.SearchName)
 	}
 
+	// 2. paging (offset & limit)
 	allItemCount := len(list)
 	remainingItemCount := allItemCount - ((lse.Offset + 1) * lse.Limit)
 	start := lse.Offset * lse.Limit
-
-	fmt.Println("allItemCount:", allItemCount)
-	fmt.Println("remainingItemCount:", remainingItemCount)
-	fmt.Println("start:", start)
 
 	if lse.Limit == 0 || remainingItemCount < 0 {
 		remainingItemCount = 0
