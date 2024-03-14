@@ -13,6 +13,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/testapigroup/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"os"
+	"reflect"
 	sigyaml "sigs.k8s.io/yaml"
 	"strconv"
 	"strings"
@@ -23,8 +24,9 @@ var (
 )
 
 type ListSearchElement struct {
-	Offset int
-	Limit  int
+	Offset     int
+	Limit      int
+	SearchName string
 }
 
 func Settings() {
@@ -134,8 +136,9 @@ func ListSearchCheck(c *fiber.Ctx) (*ListSearchElement, error) {
 	}
 
 	lse := ListSearchElement{
-		Offset: offset,
-		Limit:  limit,
+		Offset:     offset,
+		Limit:      limit,
+		SearchName: strings.TrimSpace(c.Query("searchName")),
 	}
 
 	return &lse, nil
@@ -143,6 +146,10 @@ func ListSearchCheck(c *fiber.Ctx) (*ListSearchElement, error) {
 
 func ResourceListProcessing(list []interface{}, lse *ListSearchElement) (common.ListCount, []interface{}) {
 	fmt.Println("lse:", lse)
+
+	if lse.SearchName != "" {
+		list = searchResourceName(list, lse.SearchName)
+	}
 
 	allItemCount := len(list)
 	remainingItemCount := allItemCount - ((lse.Offset + 1) * lse.Limit)
@@ -172,4 +179,15 @@ func ResourceListProcessing(list []interface{}, lse *ListSearchElement) (common.
 	}
 
 	return listCount, list[start : start+lse.Limit]
+}
+
+func searchResourceName(list []interface{}, searchName string) []interface{} {
+	var searchList []interface{}
+	for _, re := range list {
+		name := reflect.ValueOf(re).FieldByName("Name").String()
+		if strings.Contains(name, searchName) {
+			searchList = append(searchList, re)
+		}
+	}
+	return searchList
 }
