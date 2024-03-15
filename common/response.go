@@ -54,7 +54,7 @@ func ListRespOK(c *fiber.Ctx, listCount ListCount, data interface{}) error {
 }
 
 func RespErr(c *fiber.Ctx, err error) error {
-	log.Errorf("%s", err.Error())
+	log.Errorf("[RespErr Reason]: %s", err.Error())
 	resultStatus := ResultStatus{
 		ResultCode:     RESULT_STATUS_FAIL,
 		ResultMessage:  localize(c, err.Error()),
@@ -62,7 +62,7 @@ func RespErr(c *fiber.Ctx, err error) error {
 		DetailMessage:  localize(c, err.Error()),
 		Items:          make([]string, 0),
 	}
-	return c.Status(400).JSON(resultStatus)
+	return c.Status(200).JSON(resultStatus)
 
 }
 

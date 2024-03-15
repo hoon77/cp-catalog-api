@@ -14,6 +14,7 @@ import (
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/helmpath"
 	"helm.sh/helm/v3/pkg/repo"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -74,18 +75,23 @@ func AddRepo(c *fiber.Ctx) error {
 	newRepo.Name = c.Params("repositories")
 
 	if err := addRepoVaildCheck(newRepo); err != nil {
-		return err
+		return common.RespErr(c, err)
+	}
+
+	if err := repoConnectionCheck(newRepo.URL); err != nil {
+		return common.RespErr(c, err)
 	}
 
 	// Ensure the file directory exists as it is required for file locking
 	err := os.MkdirAll(filepath.Dir(repoFile), os.ModePerm)
 	if err != nil && !os.IsExist(err) {
-		return err
+		return common.RespErr(c, err)
 	}
 
 	// Acquire a file lock for process synchronization
 	if err := syncRepoLock(repoFile); err != nil {
-		return err
+
+		return common.RespErr(c, err)
 	}
 
 	f, err := repo.LoadFile(repoFile)
@@ -134,14 +140,13 @@ func AddRepo(c *fiber.Ctx) error {
 			log.Info("Delete certificate due to failed add repository..", caFilePath)
 			_ = RemoveFile(caFilePath)
 		}
-
 		return common.RespErr(c, err)
 	}
 
 	f.Update(&repoEntry)
 
 	if err := f.WriteFile(repoFile, 0600); err != nil {
-		return err
+		return common.RespErr(c, err)
 	}
 
 	return common.RespOK(c, nil)
@@ -343,5 +348,20 @@ func saveRepoCaFile(caFilePath string, base64CA string) error {
 		return fmt.Errorf(common.REPO_CA_FAILED_SAVE)
 	}
 
+	return nil
+}
+
+func repoConnectionCheck(url string) error {
+	// default 5sec
+	client := http.Client{
+		Timeout: 5 * time.Second,
+	}
+	_, err := client.Get(url)
+	if err != nil {
+		if os.IsTimeout(err) {
+			// A timeout error occurred
+			return fmt.Errorf(common.REPO_CONNECT_TIMEOUT)
+		}
+	}
 	return nil
 }
