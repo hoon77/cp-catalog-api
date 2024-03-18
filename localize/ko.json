@@ -8,7 +8,7 @@
   "NAMESPACE_ALL_NOT_ALLOWED": "Namespace 'all'은 허용하지 않습니다.",
   "REPO_NAME_URL_REQUIRED" :"Repository 명과 URL 값 입력이 필요합니다.",
   "REPO_NAME_CONTAINS_SC" : "Repository 명에 '/'이(가) 포함되어 있습니다. '/' 없이 Repository 명을 지정하십시오",
-  "REPO_NAME_ALREADY_EXISTS" : "Repository 명이 이미 존재합니다. 다른 이름을 지정하십시오",
+  "REPO_NAME_ALREADY_EXISTS" : "해당 Repository 명이 이미 존재합니다.",
   "REPO_USERNAME_PASSWD_REQUIRED" : "인증을 사용하여 Repository를 추가하려면 Username, Password 값이 모두 필요합니다",
   "REPO_SAME_CONF_ALREADY_EXISTS" : "동일한 Repository 구성이 이미 존재합니다.",
   "REPO_CANNOT_BE_REACHED" : "올바른 Repository가 아니거나 연결할 수 없습니다.",
@@ -26,5 +26,6 @@
   "CHART_VERSION_INVALID" :  "차트 버전 형식이 올바르지 않습니다.",
   "REVERSION_NUMBER_INVALID" :  "Revision (version) 수가 올바르지 않습니다.",
   "RELEASE_NOT_FOUND" :  "해당 이름의 Release를 찾을 수 없습니다.",
-  "RELEASE_ALREADY_EXISTS" :  "Release가 이미 존재합니다."
+  "RELEASE_ALREADY_EXISTS" :  "Release가 이미 존재합니다.",
+  "cannot re-use a name that is still in use" : "해당 Release 명이 이미 존재합니다."
 }

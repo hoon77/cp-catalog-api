@@ -26,5 +26,6 @@
   "CHART_VERSION_INVALID" :  "Invalid version/constraint format",
   "REVERSION_NUMBER_INVALID" :  "Revision (version) number is invalid.",
   "RELEASE_NOT_FOUND" :  "No release found with that name.",
-  "RELEASE_ALREADY_EXISTS" :  "Release already exists."
+  "RELEASE_ALREADY_EXISTS" :  "Release already exists.",
+  "cannot re-use a name that is still in use" : "Cannot re-use a name that is still in use"
 }
