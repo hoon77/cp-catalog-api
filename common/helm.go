@@ -1,6 +1,7 @@
 package common
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang/glog"
 	"go-api/config"
@@ -21,9 +22,13 @@ type KubeInformation struct {
 	AimToken     string
 }
 
-func InitKubeInformation(c *fiber.Ctx) *KubeInformation {
+func InitKubeInformation(c *fiber.Ctx) (*KubeInformation, error) {
 	namespace := c.Params("namespace")
 	if strings.ToLower(namespace) == ALL_NAMESPACE {
+		if c.Route().Name != LIST_RELEASES {
+			// No other routes allow namespaces 'all' except list release
+			return nil, fmt.Errorf(NAMESPACE_ALL_NOT_ALLOWED)
+		}
 		namespace = ""
 	}
 
@@ -32,18 +37,21 @@ func InitKubeInformation(c *fiber.Ctx) *KubeInformation {
 		AimNamespace: namespace,
 		AimApiServer: config.Env.K8sApiServer,
 		AimToken:     config.Env.K8sToken,
-	}
+	}, nil
 }
 
 func ActionConfigInit(c *fiber.Ctx) (*action.Configuration, error) {
-	kubeInfo := InitKubeInformation(c)
+	kubeInfo, err := InitKubeInformation(c)
+	if err != nil {
+		return nil, err
+	}
 	actionConfig := new(action.Configuration)
 
 	settings.KubeAPIServer = kubeInfo.AimApiServer
 	settings.KubeToken = kubeInfo.AimToken
 	settings.KubeInsecureSkipTLSVerify = true
 
-	err := actionConfig.Init(settings.RESTClientGetter(), kubeInfo.AimNamespace, os.Getenv("HELM_DRIVER"), glog.Infof)
+	err = actionConfig.Init(settings.RESTClientGetter(), kubeInfo.AimNamespace, os.Getenv("HELM_DRIVER"), glog.Infof)
 	if err != nil {
 		glog.Errorf("%+v", err)
 		return nil, err

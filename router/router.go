@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"go-api/common"
 	"go-api/handler"
 )
 
@@ -28,7 +29,7 @@ func APIRoutes(app *fiber.App) {
 	releases := api.Group("/clusters/:clusterId/namespaces/:namespace/releases")
 	{
 		// helm list
-		releases.Get("", handler.ListReleases)
+		releases.Get("", handler.ListReleases).Name(common.LIST_RELEASES)
 		// helm get
 		releases.Get("/:release", handler.GetReleaseInfo)
 		//helm install
