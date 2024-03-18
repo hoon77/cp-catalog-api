@@ -152,6 +152,10 @@ func ResourceListProcessing(list []interface{}, lse *ListSearchElement) (common.
 
 	// 2. paging (offset & limit)
 	allItemCount := len(list)
+	if allItemCount < 1 {
+		return common.ListCount{}, make([]interface{}, 0)
+	}
+
 	remainingItemCount := allItemCount - ((lse.Offset + 1) * lse.Limit)
 	start := lse.Offset * lse.Limit
 

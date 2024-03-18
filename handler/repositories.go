@@ -78,6 +78,7 @@ func AddRepo(c *fiber.Ctx) error {
 		return common.RespErr(c, err)
 	}
 
+	log.Infof("Add repo [name: %s, url: %s]", newRepo.Name, newRepo.URL)
 	if err := repoConnectionCheck(newRepo.URL); err != nil {
 		return common.RespErr(c, err)
 	}
@@ -234,6 +235,10 @@ func UpdateRepo(c *fiber.Ctx) error {
 	}
 
 	updateRepo := repoFile.Get(repoName)
+	log.Infof("Update repo [name: %s, url: %s]", updateRepo.Name, updateRepo.URL)
+	if err := repoConnectionCheck(updateRepo.URL); err != nil {
+		return common.RespErr(c, err)
+	}
 	err = updateChart(updateRepo)
 	if err != nil {
 		log.Errorf("Failed to update repo.. %s", err.Error())
