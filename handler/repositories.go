@@ -135,8 +135,7 @@ func AddRepo(c *fiber.Ctx) error {
 	}
 
 	if _, err := r.DownloadIndexFile(); err != nil {
-		log.Errorf("error :  %s", err.Error())
-		fmt.Println("caFilePath:", caFilePath)
+		log.Errorf("[DownloadIndexFile] :  %s", err.Error())
 		if len(caFilePath) > 0 {
 			log.Info("Delete certificate due to failed add repository..", caFilePath)
 			_ = RemoveFile(caFilePath)
