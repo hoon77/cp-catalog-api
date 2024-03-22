@@ -27,5 +27,6 @@
   "REVERSION_NUMBER_INVALID" :  "Revision (version) 수가 올바르지 않습니다.",
   "RELEASE_NOT_FOUND" :  "해당 이름의 Release를 찾을 수 없습니다.",
   "RELEASE_ALREADY_EXISTS" :  "Release가 이미 존재합니다.",
+  "HUB_PACKAGE_LIMIT_ILLEGAL_ARGUMENT" : "limit(한 페이지에 가져올 리소스 최대 수)이 올바르지 않습니다. (0 < limit <= 60)",
   "cannot re-use a name that is still in use" : "해당 Release 명이 이미 존재합니다."
 }

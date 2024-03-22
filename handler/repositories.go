@@ -79,7 +79,7 @@ func AddRepo(c *fiber.Ctx) error {
 	}
 
 	log.Infof("Add repo [name: %s, url: %s]", newRepo.Name, newRepo.URL)
-	if err := repoConnectionCheck(newRepo.URL); err != nil {
+	if err := getRepoConnectionStatus(newRepo.URL); err != nil {
 		return common.RespErr(c, err)
 	}
 
@@ -235,7 +235,7 @@ func UpdateRepo(c *fiber.Ctx) error {
 
 	updateRepo := repoFile.Get(repoName)
 	log.Infof("Update repo [name: %s, url: %s]", updateRepo.Name, updateRepo.URL)
-	if err := repoConnectionCheck(updateRepo.URL); err != nil {
+	if err := getRepoConnectionStatus(updateRepo.URL); err != nil {
 		return common.RespErr(c, err)
 	}
 	err = updateChart(updateRepo)
@@ -355,17 +355,28 @@ func saveRepoCaFile(caFilePath string, base64CA string) error {
 	return nil
 }
 
-func repoConnectionCheck(url string) error {
+func getRepoConnectionStatus(url string) error {
 	// default 5sec
 	client := http.Client{
 		Timeout: 5 * time.Second,
 	}
-	_, err := client.Get(url)
+	resp, err := client.Get(url)
 	if err != nil {
 		if os.IsTimeout(err) {
 			// A timeout error occurred
 			return fmt.Errorf(common.REPO_CONNECT_TIMEOUT)
 		}
 	}
+
+	log.Info("response:", resp)
+	defer func() {
+		if resp != nil {
+			err := resp.Body.Close()
+			if err != nil {
+				log.Error(err)
+			}
+		}
+	}()
+
 	return nil
 }
