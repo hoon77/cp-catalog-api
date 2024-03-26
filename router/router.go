@@ -32,7 +32,8 @@ func APIRoutes(app *fiber.App) {
 		artifact.Get("/repositories", handler.SearchRepoHub)
 		// artifactHub search package
 		artifact.Get("/packages", handler.SearchPackageHub)
-
+		// artifactHub get package details
+		artifact.Get("/packages/:repositories/:packages", handler.GetHelmPackageInfo)
 	}
 
 	// releases

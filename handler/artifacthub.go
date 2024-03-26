@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 type artifactRepositoryElement struct {
@@ -33,8 +34,24 @@ type artifactPackageElement struct {
 	Deprecated  bool   `json:"deprecated"`
 }
 
-type artifactPackage struct {
+type artifactPackageList struct {
 	Packages []artifactPackageElement `json:"packages"`
+}
+
+type artifactPackage struct {
+	Id                string        `json:"package_id"`
+	Name              string        `json:"name"`
+	Version           string        `json:"version"`
+	AppVersion        string        `json:"app_version"`
+	Description       string        `json:"description"`
+	LogoImageId       string        `json:"logo_image_id"`
+	Icon              string        `json:"icon"`
+	Deprecated        bool          `json:"deprecated"`
+	License           string        `json:"license"`
+	HomeUrl           string        `json:"home_url"`
+	AvailableVersions []interface{} `json:"available_versions"`
+	Links             []interface{} `json:"links"`
+	ContentUrl        string        `json:"content_url"`
 }
 
 type respData struct {
@@ -58,7 +75,7 @@ func SearchRepoHub(c *fiber.Ctx) error {
 	url := c.Query("url")
 	params := fmt.Sprintf("&limit=0&name=%v&url=%v", name, url)
 	reqUrl := fmt.Sprintf("%v%v", config.Env.ArtifactHubUrl, config.Env.ArtifactHubRepoSearch) + params
-	respData, err := getRequestData(reqUrl)
+	respData, err := getRequestData(reqUrl, true)
 	if err != nil {
 		return common.RespErr(c, err)
 	}
@@ -103,13 +120,13 @@ func SearchPackageHub(c *fiber.Ctx) error {
 	}
 
 	reqUrl := fmt.Sprintf("%v%v", config.Env.ArtifactHubUrl, config.Env.ArtifactHubPackageSearch) + params
-	respData, err := getRequestData(reqUrl)
+	respData, err := getRequestData(reqUrl, true)
 	if err != nil {
 		return common.RespErr(c, err)
 	}
 
-	var artifactPackage artifactPackage
-	if err := json.Unmarshal(respData.Data, &artifactPackage); err != nil {
+	var artifactPackageList artifactPackageList
+	if err := json.Unmarshal(respData.Data, &artifactPackageList); err != nil {
 		return common.RespErr(c, err)
 	}
 
@@ -122,8 +139,8 @@ func SearchPackageHub(c *fiber.Ctx) error {
 		RemainingItemCount: remainingItemCount,
 	}
 
-	packages := make([]interface{}, 0, len(artifactPackage.Packages))
-	for _, re := range artifactPackage.Packages {
+	packages := make([]interface{}, 0, len(artifactPackageList.Packages))
+	for _, re := range artifactPackageList.Packages {
 		if len(re.LogoImageId) > 0 {
 			re.Icon = config.Env.ArtifactHubPackageLogoUrl + re.LogoImageId
 		}
@@ -133,7 +150,38 @@ func SearchPackageHub(c *fiber.Ctx) error {
 	return common.ListRespOK(c, listCount, packages)
 }
 
-func getRequestData(url string) (respData, error) {
+// GetHelmPackageInfo
+// @Summary Get Helm Package Details
+// @Tags ArtifactHub
+// @Accept json
+// @Produce json
+// @Router /api/hub/packages/:repositories/:packages [Get]
+func GetHelmPackageInfo(c *fiber.Ctx) error {
+	repoName := c.Params("repositories")
+	packageName := c.Params("packages")
+
+	packageDetailUrl := strings.ReplaceAll(config.Env.ArtifactHubPackageDetail, "{repoName}", repoName)
+	packageDetailUrl = strings.ReplaceAll(packageDetailUrl, "{packageName}", packageName)
+
+	reqUrl := fmt.Sprintf("%v%v", config.Env.ArtifactHubUrl, packageDetailUrl)
+	respData, err := getRequestData(reqUrl, false)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	var artifactPackage artifactPackage
+	if err := json.Unmarshal(respData.Data, &artifactPackage); err != nil {
+		return common.RespErr(c, err)
+	}
+
+	if len(artifactPackage.LogoImageId) > 0 {
+		artifactPackage.Icon = config.Env.ArtifactHubPackageLogoUrl + artifactPackage.LogoImageId
+	}
+
+	return common.RespOK(c, artifactPackage)
+}
+
+func getRequestData(url string, isList bool) (respData, error) {
 	log.Infof("SEND :: REQUEST-URL: %s", url)
 	resp, err := http.Get(url)
 	if err != nil {
@@ -150,15 +198,20 @@ func getRequestData(url string) (respData, error) {
 		}
 	}()
 
+	// resp.Body
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return respData{}, err
+	}
+
+	if !isList {
+		return respData{0, data}, nil
+	}
 	// Pagination-Total-Count
 	totalCount, err := strconv.Atoi(resp.Header.Get("Pagination-Total-Count"))
 	if err != nil {
 		return respData{}, err
 	}
 
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return respData{}, err
-	}
 	return respData{totalCount, data}, nil
 }
