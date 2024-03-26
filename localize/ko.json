@@ -1,6 +1,8 @@
 {
   "OK": "정상적으로 처리 되었습니다.",
+  "LIMIT_VAL_INVALID" :  "limit(한 페이지에 가져올 리소스 최대 수) 값이 올바르지 않습니다.",
   "LIMIT_ILLEGAL_ARGUMENT" : "limit(한 페이지에 가져올 리소스 최대 수)는 반드시 0 이상이여아 합니다. limit >=0",
+  "OFFSET_VAL_INVALID" :  "offset(목록 시작지점) 값이 올바르지 않습니다.",
   "OFFSET_ILLEGAL_ARGUMENT" : "offset(목록 시작지점)은 반드시 0 이상이여아 합니다. offset >=0",
   "OFFSET_REQUIRES_LIMIT_ILLEGAL_ARGUMENT" : "offset(목록 시작지점) 사용 시 limit(한 페이지에 가져올 리소스 최대 수) 값이 필요합니다.",
   "FAILED_TO_READ_CLUSTER_DATA": "클러스터 정보를 가져오는 데 실패했습니다.",

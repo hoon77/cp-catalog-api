@@ -115,22 +115,20 @@ func RemoveFile(filename string) error {
 }
 
 func ListSearchCheck(c *fiber.Ctx) (*ListSearchElement, error) {
-	offset, err := strconv.Atoi(c.Query("offset"))
+	offset, err := strconv.Atoi(c.Query("offset", "0"))
 	if err != nil {
-		offset = common.DEFAULT_OFFSET
+		return nil, fmt.Errorf(common.OFFSET_VAL_INVALID)
 	}
-	limit, err := strconv.Atoi(c.Query("limit"))
+	limit, err := strconv.Atoi(c.Query("limit", "0"))
 	if err != nil {
-		limit = common.DEFAULT_LIMIT
-	}
-
-	if limit < 0 {
-		return nil, fmt.Errorf(common.LIMIT_ILLEGAL_ARGUMENT)
+		return nil, fmt.Errorf(common.LIMIT_VAL_INVALID)
 	}
 	if offset < 0 {
 		return nil, fmt.Errorf(common.OFFSET_ILLEGAL_ARGUMENT)
 	}
-
+	if limit < 0 {
+		return nil, fmt.Errorf(common.LIMIT_ILLEGAL_ARGUMENT)
+	}
 	if offset > 0 && limit == 0 {
 		return nil, fmt.Errorf(common.OFFSET_REQUIRES_LIMIT_ILLEGAL_ARGUMENT)
 	}
@@ -138,7 +136,7 @@ func ListSearchCheck(c *fiber.Ctx) (*ListSearchElement, error) {
 	lse := ListSearchElement{
 		Offset:     offset,
 		Limit:      limit,
-		SearchName: strings.TrimSpace(c.Query("searchName")),
+		SearchName: strings.TrimSpace(c.Query("searchName", "")),
 	}
 
 	return &lse, nil

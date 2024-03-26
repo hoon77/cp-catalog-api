@@ -42,14 +42,18 @@ type respData struct {
 	Data       []byte
 }
 
-// SearchRepoArtifactHub
+// SearchRepoHub
 // @Summary Search Repo ArtifactHub
 // @Tags ArtifactHub
 // @Accept json
 // @Produce json
 // @Router /api/hub/repositories [Get]
-func SearchRepoArtifactHub(c *fiber.Ctx) error {
+func SearchRepoHub(c *fiber.Ctx) error {
 	lse, err := ListSearchCheck(c)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
 	name := c.Query("name")
 	url := c.Query("url")
 	params := fmt.Sprintf("&limit=0&name=%v&url=%v", name, url)
@@ -71,19 +75,22 @@ func SearchRepoArtifactHub(c *fiber.Ctx) error {
 		}
 	}
 
-	fmt.Println("lse::", lse)
 	itemCount, resultData := ResourceListProcessing(repos, lse)
 	return common.ListRespOK(c, itemCount, resultData)
 }
 
-// SearchPackageArtifactHub
+// SearchPackageHub
 // @Summary Search Package ArtifactHub
 // @Tags ArtifactHub
 // @Accept json
 // @Produce json
 // @Router /api/hub/packages [Get]
-func SearchPackageArtifactHub(c *fiber.Ctx) error {
+func SearchPackageHub(c *fiber.Ctx) error {
 	lse, err := ListSearchCheck(c)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
 	if lse.Limit < 1 || lse.Limit > 60 {
 		return common.RespErr(c, fmt.Errorf(common.HUB_PACKAGE_LIMIT_ILLEGAL_ARGUMENT))
 	}

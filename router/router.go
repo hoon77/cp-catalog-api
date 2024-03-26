@@ -29,9 +29,9 @@ func APIRoutes(app *fiber.App) {
 	artifact := api.Group("/hub")
 	{
 		// artifactHub search repo
-		artifact.Get("/repositories", handler.SearchRepoArtifactHub)
+		artifact.Get("/repositories", handler.SearchRepoHub)
 		// artifactHub search package
-		artifact.Get("/packages", handler.SearchPackageArtifactHub)
+		artifact.Get("/packages", handler.SearchPackageHub)
 
 	}
 
