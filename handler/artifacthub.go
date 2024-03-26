@@ -122,7 +122,15 @@ func SearchPackageHub(c *fiber.Ctx) error {
 		RemainingItemCount: remainingItemCount,
 	}
 
-	return common.ListRespOK(c, listCount, artifactPackage.Packages)
+	packages := make([]interface{}, 0, len(artifactPackage.Packages))
+	for _, re := range artifactPackage.Packages {
+		if len(re.LogoImageId) > 0 {
+			re.Icon = config.Env.ArtifactHubPackageLogoUrl + re.LogoImageId
+		}
+		packages = append(packages, re)
+	}
+
+	return common.ListRespOK(c, listCount, packages)
 }
 
 func getRequestData(url string) (respData, error) {
