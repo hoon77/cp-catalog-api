@@ -52,6 +52,7 @@ type artifactPackage struct {
 	AvailableVersions []interface{} `json:"available_versions"`
 	Links             []interface{} `json:"links"`
 	ContentUrl        string        `json:"content_url"`
+	Repository        interface{}   `json:"repository"`
 }
 
 type respData struct {
@@ -151,7 +152,7 @@ func SearchPackageHub(c *fiber.Ctx) error {
 }
 
 // GetHelmPackageInfo
-// @Summary Get Helm Package Details
+// @Summary Get Helm Package Chart Details
 // @Tags ArtifactHub
 // @Accept json
 // @Produce json
@@ -181,6 +182,28 @@ func GetHelmPackageInfo(c *fiber.Ctx) error {
 	return common.RespOK(c, artifactPackage)
 }
 
+// GetHelmPackageValues
+// @Summary Get Helm Package Chart Values
+// @Tags ArtifactHub
+// @Accept json
+// @Produce json
+// @Router /api/hub/packages/:packageID/:version/values [Get]
+func GetHelmPackageValues(c *fiber.Ctx) error {
+	packageID := c.Params("packageID")
+	version := c.Params("version")
+
+	packageValueUrl := strings.ReplaceAll(config.Env.ArtifactHubPackageValues, "{packageID}", packageID)
+	packageValueUrl = strings.ReplaceAll(packageValueUrl, "{version}", version)
+
+	reqUrl := fmt.Sprintf("%v%v", config.Env.ArtifactHubUrl, packageValueUrl)
+	respData, err := getRequestData(reqUrl, false)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	return common.RespOK(c, string(respData.Data))
+}
+
 func getRequestData(url string, isList bool) (respData, error) {
 	log.Infof("SEND :: REQUEST-URL: %s", url)
 	resp, err := http.Get(url)
@@ -198,7 +221,12 @@ func getRequestData(url string, isList bool) (respData, error) {
 		}
 	}()
 
-	// resp.Body
+	// if 404 notfound
+	if resp.StatusCode == fiber.StatusNotFound {
+		return respData{}, fmt.Errorf(common.NOT_FOUND)
+	}
+
+	// read body
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return respData{}, err
@@ -207,7 +235,8 @@ func getRequestData(url string, isList bool) (respData, error) {
 	if !isList {
 		return respData{0, data}, nil
 	}
-	// Pagination-Total-Count
+
+	//Pagination-Total-Count
 	totalCount, err := strconv.Atoi(resp.Header.Get("Pagination-Total-Count"))
 	if err != nil {
 		return respData{}, err

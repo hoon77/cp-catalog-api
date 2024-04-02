@@ -1,5 +1,6 @@
 {
   "OK": "정상적으로 처리 되었습니다.",
+  "NOT_FOUND" : "찾을 수 없습니다.",
   "LIMIT_VAL_INVALID" :  "limit(한 페이지에 가져올 리소스 최대 수) 값이 올바르지 않습니다.",
   "LIMIT_ILLEGAL_ARGUMENT" : "limit(한 페이지에 가져올 리소스 최대 수)는 반드시 0 이상이여아 합니다. limit >=0",
   "OFFSET_VAL_INVALID" :  "offset(목록 시작지점) 값이 올바르지 않습니다.",

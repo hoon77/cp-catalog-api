@@ -1,5 +1,6 @@
 {
   "OK": "Processed successfully.",
+  "NOT_FOUND" : "Could not be found.",
   "LIMIT_VAL_INVALID" :  "The limit value is invalid",
   "LIMIT_ILLEGAL_ARGUMENT" : "Limit (maximum number of resources to import on a page) must be at least zero. limit >=0",
   "OFFSET_VAL_INVALID" :  "The offset value is invalid",
