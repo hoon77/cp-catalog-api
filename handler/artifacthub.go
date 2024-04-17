@@ -113,9 +113,9 @@ func SearchPackageHub(c *fiber.Ctx) error {
 		return common.RespErr(c, fmt.Errorf(common.HUB_PACKAGE_LIMIT_ILLEGAL_ARGUMENT))
 	}
 	repo := c.Query("repo")
-	name := c.Query("name")
+	query := c.Query("query")
 
-	params := fmt.Sprintf("&offset=%v&limit=%v&ts_query_web=%v", lse.Offset*lse.Limit, lse.Limit, name)
+	params := fmt.Sprintf("&offset=%v&limit=%v&ts_query_web=%v", lse.Offset*lse.Limit, lse.Limit, query)
 	if len(repo) > 0 {
 		params += "&repo=" + repo
 	}
