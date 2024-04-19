@@ -170,7 +170,8 @@ func ListRepos(c *fiber.Ctx) error {
 	}
 
 	repos := make([]interface{}, 0, len(repositories.Repositories))
-	for _, re := range repositories.Repositories {
+	for i := len(repositories.Repositories) - 1; i >= 0; i-- {
+		re := repositories.Repositories[i]
 		repos = append(repos, repositoryElement{Name: re.Name, URL: re.URL})
 	}
 

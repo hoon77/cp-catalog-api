@@ -32,11 +32,11 @@ func RespOK(c *fiber.Ctx, data interface{}) error {
 	resultStatus := ResultStatus{
 		ResultCode:     RESULT_STATUS_SUCCESS,
 		ResultMessage:  localize(c, "OK"),
-		HttpStatusCode: 0,
+		HttpStatusCode: fiber.StatusOK,
 		DetailMessage:  localize(c, "OK"),
 		Items:          data,
 	}
-	return c.Status(200).JSON(resultStatus)
+	return c.Status(fiber.StatusOK).JSON(resultStatus)
 
 }
 
@@ -44,12 +44,12 @@ func ListRespOK(c *fiber.Ctx, listCount ListCount, data interface{}) error {
 	listResultStatus := ListResultStatus{
 		ResultCode:     RESULT_STATUS_SUCCESS,
 		ResultMessage:  localize(c, "OK"),
-		HttpStatusCode: 0,
+		HttpStatusCode: fiber.StatusOK,
 		DetailMessage:  localize(c, "OK"),
 		ItemMetaData:   listCount,
 		Items:          data,
 	}
-	return c.Status(200).JSON(listResultStatus)
+	return c.Status(fiber.StatusOK).JSON(listResultStatus)
 
 }
 
@@ -58,7 +58,7 @@ func RespErr(c *fiber.Ctx, err error) error {
 	resultStatus := ResultStatus{
 		ResultCode:     RESULT_STATUS_FAIL,
 		ResultMessage:  localize(c, err.Error()),
-		HttpStatusCode: 400,
+		HttpStatusCode: fiber.StatusBadRequest,
 		DetailMessage:  localize(c, err.Error()),
 		Items:          make([]string, 0),
 	}
