@@ -15,7 +15,7 @@ func APIRoutes(app *fiber.App) {
 		// helm repo list
 		repositories.Get("", handler.ListRepos)
 		// helm repo add
-		repositories.Post("/:repositories", handler.AddRepo)
+		repositories.Post("", handler.AddRepo)
 		// helm repo remove
 		repositories.Delete("/:repositories", handler.RemoveRepo)
 		// helm repo update

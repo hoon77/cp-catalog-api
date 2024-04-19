@@ -65,15 +65,13 @@ func addRepoVaildCheck(newRepo *addRepositoryElement) error {
 // @Tags Repository
 // @Accept json
 // @Produce json
-// @Router /api/repositories/:repositories [Post]
+// @Router /api/repositories [Post]
 func AddRepo(c *fiber.Ctx) error {
 	repoFile := settings.RepositoryConfig
 	newRepo := new(addRepositoryElement)
 	if err := c.BodyParser(newRepo); err != nil {
 		return common.RespErr(c, err)
 	}
-	newRepo.Name = c.Params("repositories")
-
 	if err := addRepoVaildCheck(newRepo); err != nil {
 		return common.RespErr(c, err)
 	}
