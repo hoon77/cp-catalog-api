@@ -17,6 +17,7 @@ import (
 	"k8s.io/kubectl/pkg/cmd/get"
 	"sigs.k8s.io/yaml"
 	"strconv"
+	"time"
 )
 
 var defaultTimeout = "5m0s"
@@ -66,7 +67,7 @@ func ListReleases(c *fiber.Ctx) error {
 	}
 
 	client := action.NewList(actionConfig)
-	client.Deployed = true
+	client.All = true
 	client.SortReverse = true
 	results, err := client.Run()
 	if err != nil {
@@ -407,7 +408,7 @@ func constructReleaseElement(r *release.Release, showStatus bool) releaseElement
 	}
 	t := "-"
 	if tspb := r.Info.LastDeployed; !tspb.IsZero() {
-		t = tspb.String()
+		t = tspb.Format(time.DateTime)
 	}
 	element.Updated = t
 
@@ -432,7 +433,7 @@ func constructReleaseInfoElement(r *release.Release) releaseElement {
 
 	t := "-"
 	if tspb := r.Info.LastDeployed; !tspb.IsZero() {
-		t = tspb.String()
+		t = tspb.Format(time.DateTime)
 	}
 	element.Updated = t
 
