@@ -13,7 +13,6 @@ import (
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/storage/driver"
-	helmtime "helm.sh/helm/v3/pkg/time"
 	"k8s.io/kubectl/pkg/cmd/get"
 	"sigs.k8s.io/yaml"
 	"strconv"
@@ -32,6 +31,7 @@ type releaseElement struct {
 	Chart        string      `json:"chart"`
 	ChartVersion string      `json:"chart_version"`
 	AppVersion   string      `json:"app_version"`
+	Home         string      `json:"home"`
 	Icon         string      `json:"icon"`
 	Notes        string      `json:"notes,omitempty"`
 	Values       string      `json:"values"`
@@ -40,12 +40,12 @@ type releaseElement struct {
 }
 
 type releaseInfo struct {
-	Revision    int           `json:"revision"`
-	Updated     helmtime.Time `json:"updated"`
-	Status      string        `json:"status"`
-	Chart       string        `json:"chart"`
-	AppVersion  string        `json:"app_version"`
-	Description string        `json:"description"`
+	Revision    int    `json:"revision"`
+	Updated     string `json:"updated"`
+	Status      string `json:"status"`
+	Chart       string `json:"chart"`
+	AppVersion  string `json:"app_version"`
+	Description string `json:"description"`
 }
 type releaseHistory []releaseInfo
 
@@ -424,6 +424,7 @@ func constructReleaseInfoElement(r *release.Release) releaseElement {
 		Chart:        r.Chart.Metadata.Name,
 		ChartVersion: r.Chart.Metadata.Version,
 		AppVersion:   r.Chart.Metadata.AppVersion,
+		Home:         r.Chart.Metadata.Home,
 		Icon:         r.Chart.Metadata.Icon,
 		Notes:        r.Info.Notes,
 		Values:       ConvertYAML(r.Chart.Values),
@@ -469,7 +470,7 @@ func getReleaseHistory(rls []*release.Release) (history releaseHistory) {
 			Description: d,
 		}
 		if !r.Info.LastDeployed.IsZero() {
-			rInfo.Updated = r.Info.LastDeployed
+			rInfo.Updated = r.Info.LastDeployed.Format(time.DateTime)
 
 		}
 		history = append(history, rInfo)
