@@ -33,7 +33,7 @@ type releaseElement struct {
 	AppVersion   string      `json:"app_version"`
 	Home         string      `json:"home"`
 	Icon         string      `json:"icon"`
-	Notes        string      `json:"notes,omitempty"`
+	Notes        string      `json:"notes"`
 	Values       string      `json:"values"`
 	Resources    interface{} `json:"resources"`
 	Mainifest    string      `json:"manifest"`
@@ -427,7 +427,7 @@ func constructReleaseInfoElement(r *release.Release) releaseElement {
 		Home:         r.Chart.Metadata.Home,
 		Icon:         r.Chart.Metadata.Icon,
 		Notes:        r.Info.Notes,
-		Values:       ConvertYAML(r.Chart.Values),
+		Values:       ConvertYAML(r.Config),
 		Resources:    GetResources(r.Manifest),
 		Mainifest:    r.Manifest,
 	}
