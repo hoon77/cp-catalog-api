@@ -3,6 +3,7 @@ package common
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/golang/glog"
 	"go-api/config"
 	"helm.sh/helm/v3/pkg/action"
@@ -50,6 +51,9 @@ func ActionConfigInit(c *fiber.Ctx) (*action.Configuration, error) {
 	settings.KubeAPIServer = kubeInfo.AimApiServer
 	settings.KubeToken = kubeInfo.AimToken
 	settings.KubeInsecureSkipTLSVerify = true
+	settings.SetNamespace(kubeInfo.AimNamespace)
+
+	log.Infof("SEND :: CLUSTER: %v, NAMESPACE: %v", kubeInfo.AimCluster, kubeInfo.AimNamespace)
 
 	err = actionConfig.Init(settings.RESTClientGetter(), kubeInfo.AimNamespace, os.Getenv("HELM_DRIVER"), glog.Infof)
 	if err != nil {

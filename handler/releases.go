@@ -12,6 +12,7 @@ import (
 	"helm.sh/helm/v3/pkg/downloader"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/release"
+	"helm.sh/helm/v3/pkg/releaseutil"
 	"helm.sh/helm/v3/pkg/storage/driver"
 	"k8s.io/kubectl/pkg/cmd/get"
 	"sigs.k8s.io/yaml"
@@ -36,7 +37,7 @@ type releaseElement struct {
 	Notes        string      `json:"notes"`
 	Values       string      `json:"values"`
 	Resources    interface{} `json:"resources"`
-	Mainifest    string      `json:"manifest"`
+	Manifest     string      `json:"manifest"`
 }
 
 type releaseInfo struct {
@@ -46,6 +47,7 @@ type releaseInfo struct {
 	Chart       string `json:"chart"`
 	AppVersion  string `json:"app_version"`
 	Description string `json:"description"`
+	Manifest    string `json:"manifest"`
 }
 type releaseHistory []releaseInfo
 
@@ -68,6 +70,7 @@ func ListReleases(c *fiber.Ctx) error {
 
 	client := action.NewList(actionConfig)
 	client.All = true
+	client.ByDate = true
 	client.SortReverse = true
 	results, err := client.Run()
 	if err != nil {
@@ -256,16 +259,12 @@ func GetReleaseHistories(c *fiber.Ctx) error {
 	}
 
 	client := action.NewHistory(actionConfig)
-	results, err := client.Run(name)
+	results, err := getHistory(client, name)
 	if err != nil {
 		return common.RespErr(c, err)
 	}
 
-	if len(results) == 0 {
-		return common.RespOK(c, &releaseHistory{})
-	}
-
-	return common.RespOK(c, getReleaseHistory(results))
+	return common.RespOK(c, results)
 }
 
 // GetReleaseResources
@@ -429,7 +428,7 @@ func constructReleaseInfoElement(r *release.Release) releaseElement {
 		Notes:        r.Info.Notes,
 		Values:       ConvertYAML(r.Config),
 		Resources:    GetResources(r.Manifest),
-		Mainifest:    r.Manifest,
+		Manifest:     r.Manifest,
 	}
 
 	t := "-"
@@ -461,6 +460,7 @@ func getReleaseHistory(rls []*release.Release) (history releaseHistory) {
 		v := r.Version
 		d := r.Info.Description
 		a := formatAppVersion(r.Chart)
+		m := r.Manifest
 
 		rInfo := releaseInfo{
 			Revision:    v,
@@ -468,6 +468,7 @@ func getReleaseHistory(rls []*release.Release) (history releaseHistory) {
 			Chart:       c,
 			AppVersion:  a,
 			Description: d,
+			Manifest:    m,
 		}
 		if !r.Info.LastDeployed.IsZero() {
 			rInfo.Updated = r.Info.LastDeployed.Format(time.DateTime)
@@ -567,4 +568,26 @@ func GetReleaseOld(c *fiber.Ctx) error {
 	}
 
 	return common.RespOK(c, nil)
+}
+
+func getHistory(client *action.History, name string) (releaseHistory, error) {
+	hist, err := client.Run(name)
+	if err != nil {
+		return nil, err
+	}
+
+	releaseutil.Reverse(hist, releaseutil.SortByRevision)
+
+	var rels []*release.Release
+	for i := len(hist) - 1; i >= 0; i-- {
+		rels = append(rels, hist[i])
+	}
+
+	if len(rels) == 0 {
+		return releaseHistory{}, nil
+	}
+
+	releaseHistory := getReleaseHistory(rels)
+
+	return releaseHistory, nil
 }
