@@ -10,6 +10,7 @@ import (
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
+	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/downloader"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/release"
@@ -95,6 +96,9 @@ func ListReleases(c *fiber.Ctx) error {
 // @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release [Get]
 func GetReleaseInfo(c *fiber.Ctx) error {
 	name := c.Params("release")
+	userDefined, err := strconv.ParseBool(c.Query("userDefined", "1"))
+	log.Infof("GetReleaseInfo :: userDefined: %v", userDefined)
+
 	actionConfig, err := common.ActionConfigInit(c)
 	if err != nil {
 		return common.RespErr(c, err)
@@ -109,7 +113,10 @@ func GetReleaseInfo(c *fiber.Ctx) error {
 		return common.RespErr(c, err)
 	}
 
-	releaseElement := constructReleaseInfoElement(results)
+	releaseElement, err := constructReleaseInfoElement(results, userDefined)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
 
 	return common.RespOK(c, releaseElement)
 }
@@ -122,10 +129,12 @@ func GetReleaseInfo(c *fiber.Ctx) error {
 // @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release [Post]
 func InstallRelease(c *fiber.Ctx) error {
 	preview, err := strconv.ParseBool(c.Query("preview", "0"))
+	userDefined, err := strconv.ParseBool(c.Query("userDefined", "1"))
+
 	if err != nil {
 		return common.RespErr(c, err)
 	}
-	log.Infof("InstallRelease :: preview: %v", preview)
+	log.Infof("InstallRelease :: preview: %v, userDefined: %v", preview, userDefined)
 
 	newRelease := new(releaseElement)
 	if err := c.BodyParser(newRelease); err != nil {
@@ -143,7 +152,11 @@ func InstallRelease(c *fiber.Ctx) error {
 		return common.RespErr(c, err)
 	}
 
-	releaseElement := constructReleaseInfoElement(rel)
+	releaseElement, err := constructReleaseInfoElement(rel, userDefined)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
 	return common.RespOK(c, releaseElement)
 }
 
@@ -429,7 +442,12 @@ func constructReleaseElement(r *release.Release, showStatus bool) releaseElement
 	return element
 }
 
-func constructReleaseInfoElement(r *release.Release) releaseElement {
+func constructReleaseInfoElement(r *release.Release, userDefined bool) (releaseElement, error) {
+	values, err := mergeValuesUtil(r, userDefined)
+	if err != nil {
+		return releaseElement{}, err
+	}
+
 	element := releaseElement{
 		Name:         r.Name,
 		Namespace:    r.Namespace,
@@ -441,7 +459,7 @@ func constructReleaseInfoElement(r *release.Release) releaseElement {
 		Home:         r.Chart.Metadata.Home,
 		Icon:         r.Chart.Metadata.Icon,
 		Notes:        r.Info.Notes,
-		Values:       ConvertYAML(r.Config),
+		Values:       values,
 		Resources:    GetResources(r.Manifest),
 		Manifest:     r.Manifest,
 	}
@@ -452,7 +470,7 @@ func constructReleaseInfoElement(r *release.Release) releaseElement {
 	}
 	element.Updated = t
 
-	return element
+	return element, nil
 }
 
 // MergeValues merges values from files specified via -f/--values and directly
@@ -605,4 +623,25 @@ func getHistory(client *action.History, name string) (releaseHistory, error) {
 	releaseHistory := getReleaseHistory(rels)
 
 	return releaseHistory, nil
+}
+
+func mergeValuesUtil(r *release.Release, f bool) (string, error) {
+	allVals := r.Config
+
+	if !f {
+		merged, err := chartutil.MergeValues(r.Chart, r.Config)
+		if err != nil {
+			return "", fmt.Errorf("failed to merge chart vals with user defined")
+		}
+		allVals = merged
+	}
+
+	if len(allVals) > 0 {
+		data, err := yaml.Marshal(allVals)
+		if err != nil {
+			return "", fmt.Errorf("failed to serialize values into YAML")
+		}
+		return string(data), nil
+	}
+	return "", nil
 }
