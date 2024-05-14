@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"go-api/common"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
@@ -120,6 +121,12 @@ func GetReleaseInfo(c *fiber.Ctx) error {
 // @Produce json
 // @Router /api/clusters/:clusterId/namespaces/:namespace/releases/:release [Post]
 func InstallRelease(c *fiber.Ctx) error {
+	preview, err := strconv.ParseBool(c.Query("preview", "0"))
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+	log.Infof("InstallRelease :: preview: %v", preview)
+
 	newRelease := new(releaseElement)
 	if err := c.BodyParser(newRelease); err != nil {
 		return common.RespErr(c, err)
@@ -131,10 +138,13 @@ func InstallRelease(c *fiber.Ctx) error {
 		return common.RespErr(c, fmt.Errorf(common.CHART_INFO_INVALID))
 	}
 
-	if err := runInstall(c, newRelease); err != nil {
+	rel, err := runInstall(c, newRelease, preview)
+	if err != nil {
 		return common.RespErr(c, err)
 	}
-	return common.RespOK(c, nil)
+
+	releaseElement := constructReleaseInfoElement(rel)
+	return common.RespOK(c, releaseElement)
 }
 
 // UpgradeRelease
@@ -317,15 +327,15 @@ func GetReleaseResources(c *fiber.Ctx) error {
 	return common.RespOK(c, buf.String())
 }
 
-func runInstall(c *fiber.Ctx, release *releaseElement) (err error) {
+func runInstall(c *fiber.Ctx, release *releaseElement, justTemplate bool) (*release.Release, error) {
 	vals, err := mergeValues(release.Values)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	actionConfig, err := common.ActionConfigInit(c)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	client := action.NewInstall(actionConfig)
@@ -333,21 +343,26 @@ func runInstall(c *fiber.Ctx, release *releaseElement) (err error) {
 	client.Namespace = release.Namespace
 	client.Version = release.ChartVersion
 
+	if justTemplate {
+		client.DryRunOption = "true"
+		client.DryRun = true
+	}
+
 	aimChart := fmt.Sprintf("%s/%s", release.Repo, release.Chart)
 
 	cp, err := client.ChartPathOptions.LocateChart(aimChart, settings)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	chartRequested, err := loader.Load(cp)
 	if err != nil {
-		return
+		return nil, err
 	}
 
 	validInstallableChart, err := isChartInstallable(chartRequested)
 	if !validInstallableChart {
-		return
+		return nil, err
 	}
 
 	if req := chartRequested.Metadata.Dependencies; req != nil {
@@ -365,20 +380,20 @@ func runInstall(c *fiber.Ctx, release *releaseElement) (err error) {
 					RepositoryCache:  settings.RepositoryCache,
 				}
 				if err = man.Update(); err != nil {
-					return
+					return nil, err
 				}
 			} else {
-				return
+				return nil, err
 			}
 		}
 	}
 
-	_, err = client.Run(chartRequested, vals)
+	rel, err := client.Run(chartRequested, vals)
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	return nil
+	return rel, nil
 }
 
 func isChartInstallable(ch *chart.Chart) (bool, error) {
