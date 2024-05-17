@@ -42,23 +42,35 @@ type repoChartList []repoChartElement
 // @Tags Charts
 // @Accept json
 // @Produce json
-// @Router /api/repositories/:repositories/charts/:charts/versions [Get]
+// @Router /api/charts/:charts/versions [Get]
 func GetChartVersions(c *fiber.Ctx) error {
-	repoName := c.Params("repositories")
-	charts := c.Params("charts") // search keyword
+	charts := c.Params("charts")    // search keyword
+	repoName := c.Query("repo", "") // repo name
 	version := c.Query("version")
 	// default stable
 	if version == "" {
 		version = ">0.0.0"
 	}
 
-	index, err := buildSearchIndex(repoName)
+	var index *search.Index
+	var err error
+	var keyword string
+
+	if len(repoName) < 1 {
+		// search in all repos
+		index, err = buildSearchIndexAll()
+		keyword = fmt.Sprintf("%s\v", charts)
+	} else {
+		index, err = buildSearchIndex(repoName)
+		keyword = fmt.Sprintf("\v%s/%s\v", repoName, charts)
+	}
+
 	if err != nil {
 		return common.RespErr(c, err)
 	}
 
 	var res []*search.Result
-	res, err = index.Search(fmt.Sprintf("%s/%s[^-]", repoName, charts), searchMaxScore, true)
+	res, err = index.Search(keyword, searchMaxScore, true)
 	if err != nil {
 		return common.RespErr(c, err)
 	}
@@ -83,7 +95,7 @@ func GetChartVersions(c *fiber.Ctx) error {
 
 // GetChartInfo
 // @Summary Get Chart Info
-// @Tags Charts
+// @Tags Repository
 // @Accept json
 // @Produce json
 // @Router /api/repositories/:repositories/charts/:charts/info [Get]
@@ -176,6 +188,26 @@ func buildSearchIndex(repoName string) (*search.Index, error) {
 	}
 
 	index.AddRepo(repoName, indexFile, true)
+	return index, nil
+}
+
+func buildSearchIndexAll() (*search.Index, error) {
+	repos, err := repo.LoadFile(settings.RepositoryConfig)
+	if err != nil || len(repos.Repositories) == 0 {
+		return nil, err
+	}
+
+	index := search.NewIndex()
+
+	for _, re := range repos.Repositories {
+		repoName := re.Name
+		f := filepath.Join(settings.RepositoryCache, helmpath.CacheIndexFile(repoName))
+		indexFile, err := repo.LoadIndexFile(f)
+		if err != nil {
+			continue
+		}
+		index.AddRepo(repoName, indexFile, true)
+	}
 	return index, nil
 }
 

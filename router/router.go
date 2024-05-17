@@ -22,7 +22,8 @@ func APIRoutes(app *fiber.App) {
 		repositories.Put("/:repositories", handler.UpdateRepo)
 		// helm search chart list
 		repositories.Get("/:repositories/charts", handler.ListRepoCharts)
-
+		// helm show chart
+		repositories.Get("/:repositories/charts/:charts/info", handler.GetChartInfo)
 	}
 
 	// artifactHub
@@ -59,10 +60,9 @@ func APIRoutes(app *fiber.App) {
 		releases.Get("/:release/resources", handler.GetReleaseResources)
 	}
 
-	charts := api.Group("/repositories/:repositories/charts/:charts")
-	{
+	charts := api.Group("/charts/:charts")
+	{ // helm search charts (all versions)
 		charts.Get("/versions", handler.GetChartVersions)
-		charts.Get("/info", handler.GetChartInfo)
 	}
 
 }
