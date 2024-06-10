@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/Masterminds/semver/v3"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"go-api/common"
 	"helm.sh/helm/v3/cmd/helm/search"
 	"helm.sh/helm/v3/pkg/action"
@@ -30,6 +31,7 @@ type repoChartElement struct {
 	Name        string `json:"name"`
 	Version     string `json:"version"`
 	AppVersion  string `json:"app_version"`
+	Home        string `json:"home"`
 	Description string `json:"description"`
 	Icon        string `json:"icon"`
 	RepoName    string `json:"repoName"`
@@ -52,6 +54,7 @@ func GetChartVersions(c *fiber.Ctx) error {
 		version = ">0.0.0"
 	}
 
+	log.Infof("GetChartVersions :: repoName: %v, charts: %v", repoName, charts)
 	var index *search.Index
 	var err error
 	var keyword string
@@ -59,7 +62,7 @@ func GetChartVersions(c *fiber.Ctx) error {
 	if len(repoName) < 1 {
 		// search in all repos
 		index, err = buildSearchIndexAll()
-		keyword = fmt.Sprintf("%s\v", charts)
+		keyword = fmt.Sprintf("/%s\v", charts)
 	} else {
 		index, err = buildSearchIndex(repoName)
 		keyword = fmt.Sprintf("\v%s/%s\v", repoName, charts)
@@ -87,6 +90,7 @@ func GetChartVersions(c *fiber.Ctx) error {
 			Name:       v.Name,
 			Version:    v.Chart.Version,
 			AppVersion: v.Chart.AppVersion,
+			Home:       v.Chart.Home,
 		})
 	}
 
