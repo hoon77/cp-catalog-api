@@ -26,6 +26,9 @@ type envConfigs struct {
 	ArtifactHubPackageDetail  string `mapstructure:"ARTIFACT_HUB_PACKAGE_DETAIL"`
 	ArtifactHubPackageValues  string `mapstructure:"ARTIFACT_HUB_PACKAGE_VALUES"`
 	ArtifactHubPackageLogoUrl string `mapstructure:"ARTIFACT_HUB_PACKAGE_LOGO_URL"`
+	VaultRoleName             string `mapstructure:"VAULT_ROLE_NAME"`
+	VaultRoleId               string `mapstructure:"VAULT_ROLE_ID"`
+	VaultSecretId             string `mapstructure:"VAULT_SECRET_ID"`
 }
 
 func loadEnvVariables() (config *envConfigs) {
