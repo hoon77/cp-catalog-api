@@ -132,6 +132,11 @@ func AddRepo(c *fiber.Ctx) error {
 		return common.RespErr(c, err)
 	}
 
+	// set cache path
+	log.Infof("[settings.RepositoryCache]: %v", settings.RepositoryCache)
+	if settings.RepositoryCache != "" {
+		r.CachePath = settings.RepositoryCache
+	}
 	if _, err := r.DownloadIndexFile(); err != nil {
 		log.Errorf("[DownloadIndexFile] :  %s", err.Error())
 		if len(caFilePath) > 0 {
@@ -315,6 +320,11 @@ func updateChart(repoEntry *repo.Entry) error {
 	chartRepository, err := repo.NewChartRepository(repoEntry, getter.All(settings))
 	if err != nil {
 		return err
+	}
+
+	// set cache path
+	if settings.RepositoryCache != "" {
+		chartRepository.CachePath = settings.RepositoryCache
 	}
 	if _, err := chartRepository.DownloadIndexFile(); err != nil {
 		return err

@@ -21,9 +21,10 @@ RUN cp /build/main .
 FROM alpine
 COPY --from=builder /dist/main .
 COPY localize ./localize
-COPY repo-cacerts ./repo-cacerts
 COPY app.env .
-RUN mkdir -p /opt/helm/config
-RUN mkdir -p /opt/helm/cache
-COPY repositories.yaml /opt/helm/config
+
+RUN addgroup -S 1000 && adduser -S 1000 -G 1000
+RUN mkdir -p /home/1000
+RUN chown -R 1000:1000 /home/1000
+
 ENTRYPOINT ["/main"]
