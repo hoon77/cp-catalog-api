@@ -8,6 +8,8 @@ import (
 	"go-api/handler"
 	"go-api/middleware"
 	"go-api/router"
+	"helm.sh/helm/v3/pkg/repo"
+	"os"
 )
 
 func init() {
@@ -29,6 +31,8 @@ func main() {
 	log.Info("TEST: VAULT_ROLE_NAME:", config.Env.VaultRoleName)
 	log.Info("TEST: VAULT_ROLE_ID:", config.Env.VaultRoleId)
 	log.Info("TEST: VAULT_SECRET_ID:", config.Env.VaultSecretId)
+
+	makeRepoConfig()
 	app := fiber.New()
 	middleware.FiberMiddleware(app)
 	middleware.SetupLocalize(app)
@@ -38,5 +42,19 @@ func main() {
 	err := app.Listen(config.Env.ServerPort)
 	if err != nil {
 		log.Fatal("Server is not running! Reason: %v", err)
+	}
+}
+
+func makeRepoConfig() {
+	if _, err := os.Stat(config.Env.HelmRepoConfig); os.IsNotExist(err) {
+		log.Info("repositories.yaml does not exist...")
+		repositories := repo.NewFile()
+		log.Infof("Create File...(path : %s)", config.Env.HelmRepoConfig)
+		if err = repositories.WriteFile(config.Env.HelmRepoConfig, 0600); err != nil {
+			log.Info(err)
+		}
+	}
+	if err := os.MkdirAll(config.Env.HelmRepoCache, os.ModePerm); err != nil {
+		log.Info(err)
 	}
 }

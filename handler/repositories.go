@@ -368,7 +368,7 @@ func getRepoConnectionStatus(url string) error {
 		}
 	}
 
-	log.Info("response:", resp)
+	log.Infof("Repository connection status :%s, %v", url, resp)
 	defer func() {
 		if resp != nil {
 			err := resp.Body.Close()
