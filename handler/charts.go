@@ -54,7 +54,7 @@ func GetChartVersions(c *fiber.Ctx) error {
 		version = ">0.0.0"
 	}
 
-	log.Infof("GetChartVersions :: repoName: %v, charts: %v", repoName, charts)
+	log.Infof("[GetChartVersions] repoName: %v, charts: %v", repoName, charts)
 	var index *search.Index
 	var err error
 	var keyword string

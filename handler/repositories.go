@@ -108,7 +108,7 @@ func AddRepo(c *fiber.Ctx) error {
 	// save ca.crt
 	caFilePath := ""
 	if len(newRepo.CaBase64) > 0 {
-		caFilePath = fmt.Sprintf("%s\\%s.crt", config.Env.HelmRepoCA, newRepo.Name)
+		caFilePath = fmt.Sprintf("%s/%s.crt", config.Env.HelmRepoCA, newRepo.Name)
 		if err := os.MkdirAll(config.Env.HelmRepoCA, os.ModePerm); err != nil && !os.IsExist(err) {
 			return common.RespErr(c, err)
 		}
