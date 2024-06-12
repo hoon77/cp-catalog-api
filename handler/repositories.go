@@ -108,8 +108,8 @@ func AddRepo(c *fiber.Ctx) error {
 	// save ca.crt
 	caFilePath := ""
 	if len(newRepo.CaBase64) > 0 {
-		caFilePath = fmt.Sprintf("%s%s.crt", config.Env.RepoCertPath, newRepo.Name)
-		if err := os.MkdirAll(config.Env.RepoCertPath, os.ModePerm); err != nil && !os.IsExist(err) {
+		caFilePath = fmt.Sprintf("%s\\%s.crt", config.Env.HelmRepoCA, newRepo.Name)
+		if err := os.MkdirAll(config.Env.HelmRepoCA, os.ModePerm); err != nil && !os.IsExist(err) {
 			return common.RespErr(c, err)
 		}
 		if err := saveRepoCaFile(caFilePath, newRepo.CaBase64); err != nil {
@@ -378,7 +378,6 @@ func getRepoConnectionStatus(url string) error {
 		}
 	}
 
-	log.Infof("Repository connection status :%s, %v", url, resp)
 	defer func() {
 		if resp != nil {
 			err := resp.Body.Close()

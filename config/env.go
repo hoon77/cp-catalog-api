@@ -19,7 +19,7 @@ type envConfigs struct {
 	K8sToken                  string `mapstructure:"K8S_TOKEN"`
 	HelmRepoConfig            string `mapstructure:"HELM_REPO_CONFIG"`
 	HelmRepoCache             string `mapstructure:"HELM_REPO_CACHE"`
-	RepoCertPath              string `mapstructure:"REPO_CERT_PATH"`
+	HelmRepoCA                string `mapstructure:"HELM_REPO_CA"`
 	ArtifactHubUrl            string `mapstructure:"ARTIFACT_HUB_API_URL"`
 	ArtifactHubRepoSearch     string `mapstructure:"ARTIFACT_HUB_REPO_SEARCH"`
 	ArtifactHubPackageSearch  string `mapstructure:"ARTIFACT_HUB_PACKAGE_SEARCH"`

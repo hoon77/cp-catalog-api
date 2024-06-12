@@ -46,15 +46,23 @@ func main() {
 }
 
 func makeRepoConfig() {
+	// Check repositories.yaml exists
 	if _, err := os.Stat(config.Env.HelmRepoConfig); os.IsNotExist(err) {
 		log.Info("repositories.yaml does not exist...")
 		repositories := repo.NewFile()
-		log.Infof("Create File...(path : %s)", config.Env.HelmRepoConfig)
+		log.Infof("Create repositories.yaml...(path : %s)", config.Env.HelmRepoConfig)
 		if err = repositories.WriteFile(config.Env.HelmRepoConfig, 0600); err != nil {
-			log.Info(err)
+			log.Infof("Failed to create repositories.yaml ...%s", err)
 		}
 	}
+
+	// Check repository cache path exists
 	if err := os.MkdirAll(config.Env.HelmRepoCache, os.ModePerm); err != nil {
-		log.Info(err)
+		log.Infof("Failed to create cache directory(path : %s)...%s", config.Env.HelmRepoCache, err)
+	}
+
+	// Check repository ca file path exists
+	if err := os.MkdirAll(config.Env.HelmRepoCA, os.ModePerm); err != nil {
+		log.Infof("Failed to create ca directory(path : %s)...%s", config.Env.HelmRepoCA, err)
 	}
 }
