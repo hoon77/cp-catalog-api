@@ -18,6 +18,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -76,7 +77,7 @@ func AddRepo(c *fiber.Ctx) error {
 		return common.RespErr(c, err)
 	}
 
-	log.Infof("Add repo [name: %s, url: %s]", newRepo.Name, newRepo.URL)
+	log.Infof("Add repo (name: %s, url: %s)", newRepo.Name, newRepo.URL)
 	if err := getRepoConnectionStatus(newRepo.URL); err != nil {
 		return common.RespErr(c, err)
 	}
@@ -108,7 +109,8 @@ func AddRepo(c *fiber.Ctx) error {
 	// save ca.crt
 	caFilePath := ""
 	if len(newRepo.CaBase64) > 0 {
-		caFilePath = fmt.Sprintf("%s/%s.crt", config.Env.HelmRepoCA, newRepo.Name)
+		caFile := newRepo.Name + ".crt"
+		caFilePath = filepath.Join(config.Env.HelmRepoCA, caFile)
 		if err := os.MkdirAll(config.Env.HelmRepoCA, os.ModePerm); err != nil && !os.IsExist(err) {
 			return common.RespErr(c, err)
 		}
@@ -238,10 +240,7 @@ func UpdateRepo(c *fiber.Ctx) error {
 	}
 
 	updateRepo := repoFile.Get(repoName)
-	log.Infof("Update repo [name: %s, url: %s]", updateRepo.Name, updateRepo.URL)
-	if err := getRepoConnectionStatus(updateRepo.URL); err != nil {
-		return common.RespErr(c, err)
-	}
+	log.Infof("Update repo (name: %s, url: %s)", updateRepo.Name, updateRepo.URL)
 	err = updateChart(updateRepo)
 	if err != nil {
 		log.Errorf("Failed to update repo.. %s", err.Error())
@@ -317,6 +316,10 @@ func syncRepoLock(repoFile string) error {
 }
 
 func updateChart(repoEntry *repo.Entry) error {
+	if err := getRepoConnectionStatus(repoEntry.URL); err != nil {
+		return err
+	}
+
 	chartRepository, err := repo.NewChartRepository(repoEntry, getter.All(settings))
 	if err != nil {
 		return err
@@ -326,7 +329,7 @@ func updateChart(repoEntry *repo.Entry) error {
 	if settings.RepositoryCache != "" {
 		chartRepository.CachePath = settings.RepositoryCache
 	}
-	if _, err := chartRepository.DownloadIndexFile(); err != nil {
+	if _, err = chartRepository.DownloadIndexFile(); err != nil {
 		return err
 	}
 
@@ -388,4 +391,55 @@ func getRepoConnectionStatus(url string) error {
 	}()
 
 	return nil
+}
+
+// ClearRepoCache
+// @Summary Clear Repo Cache
+// @Tags Repository
+// @Accept json
+// @Produce json
+// @Router /api/repositories/cache/clear [DELETE]
+func ClearRepoCache(c *fiber.Ctx) error {
+	// Load repo config
+	repoFile, err := repo.LoadFile(settings.RepositoryConfig)
+	if err != nil {
+		return common.RespErr(c, fmt.Errorf(common.REPO_FAILED_LOADING_FILE))
+	}
+
+	// Remove all files in these directories.
+	path := filepath.Join(config.Env.HelmRepoCache, "*")
+	log.Infof("clear repo cache path: %s", path)
+	err = RemoveGlob(path)
+	if err != nil {
+		return common.RespErr(c, err)
+	}
+
+	// Update repository configurations
+	repoFailList := UpdateRepoAll(repoFile)
+	if len(repoFailList) > 0 {
+		log.Info(repoFailList)
+	}
+
+	//return repoFailList
+	return common.RespOK(c, repoFailList)
+}
+
+func UpdateRepoAll(repoFile *repo.File) []string {
+	var repoFailList []string
+	var wg sync.WaitGroup
+	for _, re := range repoFile.Repositories {
+		wg.Add(1)
+		go func(re *repo.Entry) {
+			defer wg.Done()
+			log.Infof("Update repo (name: %s, url: %s)", re.Name, re.URL)
+			err := updateChart(re)
+			if err != nil {
+				log.Errorf("Failed to update the repo (name: %s, url: %s, err: %s)", re.Name, re.URL, err)
+				repoFailList = append(repoFailList, re.Name)
+			}
+		}(re)
+	}
+	wg.Wait()
+
+	return repoFailList
 }

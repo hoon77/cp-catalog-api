@@ -13,6 +13,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/testapigroup/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
 	"os"
+	"path/filepath"
 	"reflect"
 	sigyaml "sigs.k8s.io/yaml"
 	"strconv"
@@ -188,4 +189,18 @@ func searchResourceName(list []interface{}, searchName string) []interface{} {
 		}
 	}
 	return searchList
+}
+
+func RemoveGlob(path string) (err error) {
+	contents, err := filepath.Glob(path)
+	if err != nil {
+		return
+	}
+	for _, item := range contents {
+		err = os.RemoveAll(item)
+		if err != nil {
+			log.Infof("Error removing files: %+v", err)
+		}
+	}
+	return
 }
