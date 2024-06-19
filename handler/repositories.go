@@ -96,6 +96,7 @@ func AddRepo(c *fiber.Ctx) error {
 
 	f, err := repo.LoadFile(repoFile)
 	if err != nil {
+		log.Errorf("AddRepo:: faild load file :: %v", err)
 		return common.RespErr(c, fmt.Errorf(common.REPO_FAILED_LOADING_FILE))
 	}
 
@@ -195,6 +196,7 @@ func RemoveRepo(c *fiber.Ctx) error {
 	repoName := c.Params("repositories")
 	repoFile, err := repo.LoadFile(settings.RepositoryConfig)
 	if err != nil {
+		log.Errorf("RemoveRepo:: faild load file :: %v", err)
 		return common.RespErr(c, fmt.Errorf(common.REPO_FAILED_LOADING_FILE))
 	}
 
