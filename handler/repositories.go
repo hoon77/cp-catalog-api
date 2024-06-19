@@ -171,7 +171,8 @@ func ListRepos(c *fiber.Ctx) error {
 
 	repositories, err := repo.LoadFile(settings.RepositoryConfig)
 	if err != nil {
-		return common.RespErr(c, err)
+		log.Errorf("ListRepos:: faild load file :: %v", err)
+		return common.RespErr(c, fmt.Errorf(common.REPO_FAILED_LOADING_FILE))
 	}
 
 	repos := make([]interface{}, 0, len(repositories.Repositories))
@@ -402,13 +403,15 @@ func getRepoConnectionStatus(url string) error {
 func ClearRepoCache(c *fiber.Ctx) error {
 	// Load repo config
 	repoFile, err := repo.LoadFile(settings.RepositoryConfig)
-	if err != nil {
+	switch {
+	case isNotExist(err):
+		return common.RespErr(c, fmt.Errorf(common.REPO_NO_CONFIGURED))
+	case err != nil:
 		return common.RespErr(c, fmt.Errorf(common.REPO_FAILED_LOADING_FILE))
 	}
-
 	// Remove all files in these directories.
 	path := filepath.Join(config.Env.HelmRepoCache, "*")
-	log.Infof("clear repo cache path: %s", path)
+	log.Infof("Clear Cache Path:: %s", path)
 	err = RemoveGlob(path)
 	if err != nil {
 		return common.RespErr(c, err)
@@ -417,10 +420,11 @@ func ClearRepoCache(c *fiber.Ctx) error {
 	// Update repository configurations
 	repoFailList := UpdateRepoAll(repoFile)
 	if len(repoFailList) > 0 {
-		log.Info(repoFailList)
+		log.Infof("Failed to update the following repositories: %v", repoFailList)
+	} else {
+		repoFailList = make([]string, 0)
 	}
 
-	//return repoFailList
 	return common.RespOK(c, repoFailList)
 }
 
@@ -442,4 +446,8 @@ func UpdateRepoAll(repoFile *repo.File) []string {
 	wg.Wait()
 
 	return repoFailList
+}
+
+func isNotExist(err error) bool {
+	return os.IsNotExist(errors.Cause(err))
 }

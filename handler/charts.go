@@ -84,6 +84,10 @@ func GetChartVersions(c *fiber.Ctx) error {
 		return common.RespErr(c, err)
 	}
 
+	if len(data) < 1 {
+		return common.RespErr(c, fmt.Errorf(common.CHART_INFO_INVALID))
+	}
+
 	chartList := make(repoChartList, 0, len(data))
 	for _, v := range data {
 		chartList = append(chartList, repoChartElement{
@@ -197,8 +201,13 @@ func buildSearchIndex(repoName string) (*search.Index, error) {
 
 func buildSearchIndexAll() (*search.Index, error) {
 	repos, err := repo.LoadFile(settings.RepositoryConfig)
-	if err != nil || len(repos.Repositories) == 0 {
-		return nil, err
+	switch {
+	case isNotExist(err):
+		return nil, fmt.Errorf(common.REPO_NO_CONFIGURED)
+	case err != nil:
+		return nil, fmt.Errorf(common.REPO_FAILED_LOADING_FILE)
+	case len(repos.Repositories) == 0:
+		return nil, fmt.Errorf(common.REPO_NO_CONFIGURED)
 	}
 
 	index := search.NewIndex()
