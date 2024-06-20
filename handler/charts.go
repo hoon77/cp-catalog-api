@@ -54,7 +54,7 @@ func GetChartVersions(c *fiber.Ctx) error {
 		version = ">0.0.0"
 	}
 
-	log.Infof("[GetChartVersions] repoName: %v, charts: %v", repoName, charts)
+	log.Infof("GetChartVersions:: repoName: %v, charts: %v", repoName, charts)
 	var index *search.Index
 	var err error
 	var keyword string
@@ -85,7 +85,7 @@ func GetChartVersions(c *fiber.Ctx) error {
 	}
 
 	if len(data) < 1 {
-		return common.RespErr(c, fmt.Errorf(common.CHART_INFO_INVALID))
+		return common.RespErr(c, fmt.Errorf(common.CHART_NOT_FOUND))
 	}
 
 	chartList := make(repoChartList, 0, len(data))

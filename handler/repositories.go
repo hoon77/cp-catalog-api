@@ -77,7 +77,7 @@ func AddRepo(c *fiber.Ctx) error {
 		return common.RespErr(c, err)
 	}
 
-	log.Infof("Add repo (name: %s, url: %s)", newRepo.Name, newRepo.URL)
+	log.Infof("Add repo :: name: %s, url: %s", newRepo.Name, newRepo.URL)
 	if err := getRepoConnectionStatus(newRepo.URL); err != nil {
 		return common.RespErr(c, err)
 	}
@@ -136,12 +136,12 @@ func AddRepo(c *fiber.Ctx) error {
 	}
 
 	// set cache path
-	log.Infof("[settings.RepositoryCache]: %v", settings.RepositoryCache)
+	log.Infof("settings.RepositoryCache :: %v", settings.RepositoryCache)
 	if settings.RepositoryCache != "" {
 		r.CachePath = settings.RepositoryCache
 	}
 	if _, err := r.DownloadIndexFile(); err != nil {
-		log.Errorf("[DownloadIndexFile] :  %s", err.Error())
+		log.Errorf("DownloadIndexFile ::  %s", err.Error())
 		if len(caFilePath) > 0 {
 			log.Info("Delete certificate due to failed add repository..", caFilePath)
 			_ = RemoveFile(caFilePath)
