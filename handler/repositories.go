@@ -107,10 +107,19 @@ func AddRepo(c *fiber.Ctx) error {
 		Password: newRepo.Password,
 	}
 
+	if f.Has(newRepo.Name) {
+		existing := f.Get(newRepo.Name)
+		if repoEntry != *existing {
+			return common.RespErr(c, errors.Errorf(common.REPO_NAME_ALREADY_EXISTS))
+		}
+		// The add is idempotent so do nothing
+		return common.RespErr(c, errors.Errorf(common.REPO_SAME_CONF_ALREADY_EXISTS))
+	}
+
 	// save ca.crt
 	caFilePath := ""
 	if len(newRepo.CaBase64) > 0 {
-		caFile := newRepo.Name + ".crt"
+		caFile := fmt.Sprintf("%v_%v.crt", newRepo.Name, generatingId())
 		caFilePath = filepath.Join(config.Env.HelmRepoCA, caFile)
 		if err := os.MkdirAll(config.Env.HelmRepoCA, os.ModePerm); err != nil && !os.IsExist(err) {
 			return common.RespErr(c, err)
@@ -121,37 +130,29 @@ func AddRepo(c *fiber.Ctx) error {
 		repoEntry.CAFile = caFilePath
 	}
 
-	if f.Has(newRepo.Name) {
-		existing := f.Get(newRepo.Name)
-		if repoEntry != *existing {
-			return common.RespErr(c, errors.Errorf(common.REPO_NAME_ALREADY_EXISTS))
-		}
-		// The add is idempotent so do nothing
-		return common.RespErr(c, errors.Errorf(common.REPO_SAME_CONF_ALREADY_EXISTS))
-	}
-
 	r, err := repo.NewChartRepository(&repoEntry, getter.All(settings))
 	if err != nil {
+		log.Errorf("NewChartRepository ::  %s", err.Error())
+		_ = RemoveFile(caFilePath)
 		return common.RespErr(c, err)
 	}
 
 	// set cache path
-	log.Infof("settings.RepositoryCache :: %v", settings.RepositoryCache)
 	if settings.RepositoryCache != "" {
 		r.CachePath = settings.RepositoryCache
 	}
+
 	if _, err := r.DownloadIndexFile(); err != nil {
 		log.Errorf("DownloadIndexFile ::  %s", err.Error())
-		if len(caFilePath) > 0 {
-			log.Info("Delete certificate due to failed add repository..", caFilePath)
-			_ = RemoveFile(caFilePath)
-		}
+		_ = RemoveFile(caFilePath)
 		return common.RespErr(c, err)
 	}
 
 	f.Update(&repoEntry)
 
 	if err := f.WriteFile(repoFile, 0600); err != nil {
+		log.Errorf("Write Repofile ::  %s", err.Error())
+		_ = RemoveFile(caFilePath)
 		return common.RespErr(c, err)
 	}
 
@@ -217,11 +218,8 @@ func RemoveRepo(c *fiber.Ctx) error {
 		return common.RespErr(c, err)
 	}
 
-	if len(removeRepo.CAFile) > 0 {
-		// delete ca.crt
-		log.Info("Delete certificate due to remove repository..", removeRepo.CAFile)
-		_ = RemoveFile(removeRepo.CAFile)
-	}
+	// delete repo ca.crt
+	_ = RemoveFile(removeRepo.CAFile)
 
 	return common.RespOK(c, nil)
 }

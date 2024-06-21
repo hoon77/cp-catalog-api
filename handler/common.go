@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
+	"github.com/google/uuid"
 	"go-api/common"
 	"go-api/config"
 	"helm.sh/helm/v3/pkg/cli"
@@ -107,11 +108,14 @@ func FileExists(filename string) bool {
 }
 
 func RemoveFile(filename string) error {
-	err := os.Remove(filename)
-	if err != nil {
-		return err
-	}
+	if len(filename) > 0 {
+		log.Infof("Delete file :: %s", filename)
+		err := os.Remove(filename)
+		if err != nil {
+			return err
+		}
 
+	}
 	return nil
 }
 
@@ -203,4 +207,8 @@ func RemoveGlob(path string) (err error) {
 		}
 	}
 	return
+}
+
+func generatingId() string {
+	return uuid.New().String()
 }
