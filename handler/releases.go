@@ -259,9 +259,7 @@ func UninstallRelease(c *fiber.Ctx) error {
 	if err != nil {
 		return common.RespErr(c, err)
 	}
-
-	client := action.NewUninstall(actionConfig)
-	_, err = client.Run(name)
+	err = runUninstall(actionConfig, name)
 	if err != nil {
 		return common.RespErr(c, err)
 	}
@@ -340,8 +338,8 @@ func GetReleaseResources(c *fiber.Ctx) error {
 	return common.RespOK(c, buf.String())
 }
 
-func runInstall(c *fiber.Ctx, release *releaseElement, justTemplate bool) (*release.Release, error) {
-	vals, err := mergeValues(release.Values)
+func runInstall(c *fiber.Ctx, r *releaseElement, justTemplate bool) (*release.Release, error) {
+	vals, err := mergeValues(r.Values)
 	if err != nil {
 		return nil, err
 	}
@@ -352,16 +350,16 @@ func runInstall(c *fiber.Ctx, release *releaseElement, justTemplate bool) (*rele
 	}
 
 	client := action.NewInstall(actionConfig)
-	client.ReleaseName = release.Name
-	client.Namespace = release.Namespace
-	client.Version = release.ChartVersion
+	client.ReleaseName = r.Name
+	client.Namespace = r.Namespace
+	client.Version = r.ChartVersion
 
 	if justTemplate {
 		client.DryRunOption = "true"
 		client.DryRun = true
 	}
 
-	aimChart := fmt.Sprintf("%s/%s", release.Repo, release.Chart)
+	aimChart := fmt.Sprintf("%s/%s", r.Repo, r.Chart)
 
 	cp, err := client.ChartPathOptions.LocateChart(aimChart, settings)
 	if err != nil {
@@ -403,10 +401,31 @@ func runInstall(c *fiber.Ctx, release *releaseElement, justTemplate bool) (*rele
 
 	rel, err := client.Run(chartRequested, vals)
 	if err != nil {
+		if rel != nil {
+			log.Errorf("installation failed:: namespace:%v, name:%v, status:%v, error:%v", rel.Namespace, rel.Name, rel.Info.Status.String(), err)
+			if rel.Info.Status == release.StatusFailed {
+				//uninstall release if installation failed (StatusFailed)
+				log.Infof("uninstall release:: namespace:%v, name:%v", rel.Namespace, rel.Name)
+				_ = runUninstall(actionConfig, rel.Name)
+			}
+		}
 		return nil, err
 	}
 
+	log.Infof("installed release status:: namespace:%v, name:%v, preview:%v, status:%v, desc:%v",
+		rel.Namespace, rel.Name, justTemplate, rel.Info.Status, rel.Info.Description)
+
 	return rel, nil
+}
+
+func runUninstall(actionConfig *action.Configuration, name string) error {
+	client := action.NewUninstall(actionConfig)
+	_, err := client.Run(name)
+	if err != nil {
+		log.Errorf("uninstallation failed :: %v", err)
+		return err
+	}
+	return nil
 }
 
 func isChartInstallable(ch *chart.Chart) (bool, error) {
