@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/base64"
+	"encoding/pem"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -356,12 +357,19 @@ func saveRepoCaFile(caFilePath string, base64CA string) error {
 	if FileExists(caFilePath) {
 		return fmt.Errorf(common.REPO_CA_ALREADY_EXISTS)
 	}
-	// decode CA
-	origCA, err := base64.StdEncoding.DecodeString(base64CA)
+	// base64 decode CA
+	pemCA, err := base64.StdEncoding.DecodeString(base64CA)
 	if err != nil {
 		return fmt.Errorf(common.REPO_CA_INVALID)
 	}
-	err = os.WriteFile(caFilePath, origCA, 0644)
+
+	// decode PEM block
+	block, _ := pem.Decode(pemCA)
+	if block == nil {
+		return fmt.Errorf(common.REPO_CA_INVALID)
+	}
+
+	err = os.WriteFile(caFilePath, pemCA, 0644)
 	if err != nil {
 		return fmt.Errorf(common.REPO_CA_FAILED_SAVE)
 	}
