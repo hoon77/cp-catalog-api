@@ -12,7 +12,7 @@
   "REPO_NAME_URL_REQUIRED" :"Repository 명과 URL 값 입력이 필요합니다.",
   "REPO_NAME_CONTAINS_SC" : "Repository 명에 '/'이(가) 포함되어 있습니다. '/' 없이 Repository 명을 지정하십시오",
   "REPO_NAME_ALREADY_EXISTS" : "해당 Repository 명이 이미 존재합니다.",
-  "REPO_NAME_KO_NOT_ALLOWED" :"Repository 명에 한글을 사용할 수 없습니다.",
+  "REPO_NAME_PATTERN_NOT_ALLOWED" :"Repository 명은 최대 50자 이하의 영문 또는 숫자만 허용하며 특수문자는 _  또는 - 만 사용 가능합니다.",
   "REPO_USERNAME_PASSWD_REQUIRED" : "인증을 사용하여 Repository를 추가하려면 Username, Password 값이 모두 필요합니다",
   "REPO_SAME_CONF_ALREADY_EXISTS" : "동일한 Repository 구성이 이미 존재합니다.",
   "REPO_CANNOT_BE_REACHED" : "올바른 Repository가 아니거나 연결할 수 없습니다.",

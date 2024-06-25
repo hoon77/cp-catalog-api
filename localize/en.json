@@ -12,7 +12,7 @@
   "REPO_NAME_URL_REQUIRED" :"Name and URL are required to add the repository",
   "REPO_NAME_CONTAINS_SC" : "Repository name contains '/', please specify a different name without '/'",
   "REPO_NAME_ALREADY_EXISTS" : "Repository name already exists, please specify a different name",
-  "REPO_NAME_KO_NOT_ALLOWED" :"Repository name cannot contain Korean characters.",
+  "REPO_NAME_PATTERN_NOT_ALLOWED" :"Repository name can only be up to 50 characters in English or numbers and can only be _ or - special characters.",
   "REPO_USERNAME_PASSWD_REQUIRED" : "Username and Password, both are required to add the repository with authentication",
   "REPO_SAME_CONF_ALREADY_EXISTS" : "Already exists with the same configuration",
   "REPO_CANNOT_BE_REACHED" : "Not a valid chart repository or cannot be reached.",

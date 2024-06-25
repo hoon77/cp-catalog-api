@@ -48,9 +48,9 @@ func addRepoVaildCheck(newRepo *addRepositoryElement) error {
 		return fmt.Errorf(common.REPO_NAME_URL_REQUIRED)
 	}
 
-	match, _ := regexp.MatchString(common.REGEXP_KO_MATCH_PATTERN, newRepo.Name)
-	if match {
-		return fmt.Errorf(common.REPO_NAME_KO_NOT_ALLOWED)
+	match, _ := regexp.MatchString(common.REPO_NAME_REGEXP_PATTERN, newRepo.Name)
+	if !match {
+		return fmt.Errorf(common.REPO_NAME_PATTERN_NOT_ALLOWED)
 	}
 
 	if strings.Contains(newRepo.Name, "/") {
