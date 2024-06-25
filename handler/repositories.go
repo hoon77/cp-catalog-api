@@ -357,7 +357,7 @@ func saveRepoCaFile(caFilePath string, base64CA string) error {
 	if FileExists(caFilePath) {
 		return fmt.Errorf(common.REPO_CA_ALREADY_EXISTS)
 	}
-	// base64 decode CA
+	// decode base64
 	pemCA, err := base64.StdEncoding.DecodeString(base64CA)
 	if err != nil {
 		return fmt.Errorf(common.REPO_CA_INVALID)
