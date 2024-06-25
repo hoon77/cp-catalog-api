@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -46,6 +47,12 @@ func addRepoVaildCheck(newRepo *addRepositoryElement) error {
 	if newRepo.Name == "" || newRepo.URL == "" {
 		return fmt.Errorf(common.REPO_NAME_URL_REQUIRED)
 	}
+
+	match, _ := regexp.MatchString(common.REGEXP_KO_MATCH_PATTERN, newRepo.Name)
+	if match {
+		return fmt.Errorf(common.REPO_NAME_KO_NOT_ALLOWED)
+	}
+
 	if strings.Contains(newRepo.Name, "/") {
 		return fmt.Errorf(common.REPO_NAME_CONTAINS_SC)
 	}
