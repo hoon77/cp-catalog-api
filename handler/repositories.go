@@ -295,6 +295,7 @@ func ListRepoCharts(c *fiber.Ctx) error {
 			Description: v.Chart.Description,
 			Icon:        v.Chart.Icon,
 			RepoName:    repoName,
+			Deprecated:  v.Chart.Deprecated,
 		})
 	}
 

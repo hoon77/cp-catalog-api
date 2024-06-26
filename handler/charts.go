@@ -35,6 +35,7 @@ type repoChartElement struct {
 	Description string `json:"description"`
 	Icon        string `json:"icon"`
 	RepoName    string `json:"repoName"`
+	Deprecated  bool   `json:"deprecated"`
 }
 
 type repoChartList []repoChartElement
@@ -95,6 +96,7 @@ func GetChartVersions(c *fiber.Ctx) error {
 			Version:    v.Chart.Version,
 			AppVersion: v.Chart.AppVersion,
 			Home:       v.Chart.Home,
+			Deprecated: v.Chart.Deprecated,
 		})
 	}
 
