@@ -212,3 +212,10 @@ func RemoveGlob(path string) (err error) {
 func generatingId() string {
 	return uuid.New().String()
 }
+
+func procReplaceEmpty(value string) string {
+	if len(value) < 1 {
+		return common.EMPTY_STR
+	}
+	return value
+}

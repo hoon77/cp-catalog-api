@@ -445,7 +445,7 @@ func constructReleaseElement(r *release.Release, showStatus bool) releaseElement
 		Status:       r.Info.Status.String(),
 		Chart:        r.Chart.Metadata.Name,
 		ChartVersion: r.Chart.Metadata.Version,
-		AppVersion:   r.Chart.Metadata.AppVersion,
+		AppVersion:   procReplaceEmpty(r.Chart.Metadata.AppVersion),
 		Icon:         r.Chart.Metadata.Icon,
 		Resources:    make([]string, 0),
 	}
@@ -474,7 +474,7 @@ func constructReleaseInfoElement(r *release.Release, userDefined bool) (releaseE
 		Status:       r.Info.Status.String(),
 		Chart:        r.Chart.Metadata.Name,
 		ChartVersion: r.Chart.Metadata.Version,
-		AppVersion:   r.Chart.Metadata.AppVersion,
+		AppVersion:   procReplaceEmpty(r.Chart.Metadata.AppVersion),
 		Home:         r.Chart.Metadata.Home,
 		Icon:         r.Chart.Metadata.Icon,
 		Notes:        r.Info.Notes,
@@ -518,7 +518,7 @@ func getReleaseHistory(rls []*release.Release) (history releaseHistory) {
 			Revision:    v,
 			Status:      s,
 			Chart:       c,
-			AppVersion:  a,
+			AppVersion:  procReplaceEmpty(a),
 			Description: d,
 			Manifest:    m,
 		}
