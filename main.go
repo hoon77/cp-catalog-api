@@ -34,8 +34,8 @@ func main() {
 
 	makeRepoConfig()
 	app := fiber.New()
-	middleware.FiberMiddleware(app)
 	middleware.SetupLocalize(app)
+	middleware.FiberMiddleware(app)
 	router.SwaggerRoute(app)
 	router.APIRoutes(app)
 	handler.Settings()

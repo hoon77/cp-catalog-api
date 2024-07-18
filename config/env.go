@@ -13,8 +13,7 @@ func InitEnvConfigs() {
 
 type envConfigs struct {
 	ServerPort                string `mapstructure:"SERVER_PORT"`
-	AuthUserName              string `mapstructure:"AUTH_USERNAME"`
-	AuthPassword              string `mapstructure:"AUTH_PASSWORD"`
+	JwtSecret                 string `mapstructure:"JWT_SECRET"`
 	K8sApiServer              string `mapstructure:"K8S_API_SERVER"`
 	K8sToken                  string `mapstructure:"K8S_TOKEN"`
 	HelmRepoConfig            string `mapstructure:"HELM_REPO_CONFIG"`

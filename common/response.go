@@ -63,9 +63,19 @@ func RespErr(c *fiber.Ctx, err error) error {
 		Items:          make([]string, 0),
 	}
 	return c.Status(200).JSON(resultStatus)
-
 }
 
+func RespErrStatus(c *fiber.Ctx, statusCode int, err error) error {
+	log.Errorf("[RespErr Reason]: %s", err.Error())
+	resultStatus := ResultStatus{
+		ResultCode:     RESULT_STATUS_FAIL,
+		ResultMessage:  err.Error(),
+		HttpStatusCode: statusCode,
+		DetailMessage:  localize(c, err.Error()),
+		Items:          make([]string, 0),
+	}
+	return c.Status(statusCode).JSON(resultStatus)
+}
 func localize(c *fiber.Ctx, msg string) string {
 	localize_msg, err := fiberi18n.Localize(c, msg)
 	if err != nil {
