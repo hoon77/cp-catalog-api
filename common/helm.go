@@ -51,7 +51,7 @@ func InitKubeInfo(c *fiber.Ctx) (*KubeInfo, error) {
 		AimNamespace: namespace,
 	}
 
-	err := getUserKubeAuth(c, kubeInfo)
+	err := getKubeToken(c, kubeInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -84,22 +84,52 @@ func ActionConfigInit(c *fiber.Ctx) (*action.Configuration, error) {
 	return actionConfig, nil
 }
 
-func getUserKubeAuth(c *fiber.Ctx, kubeInfo *KubeInfo) error {
-	var tokenPath string
+func getKubeToken(c *fiber.Ctx, kubeInfo *KubeInfo) error {
 	claims := c.Locals("user").(*jwt.Token).Claims.(jwt.MapClaims)
 	userType := claims["userType"].(string)
+	userAuthId := claims["userAuthId"].(string)
 
-	switch userType {
-	case AUTH_SUPER_ADMIN:
-		tokenPath = fmt.Sprintf("%v%v", config.Env.VaultClusterPath, kubeInfo.AimCluster)
-	case AUTH_CLUSTER_ADMIN, AUTH_USER:
-		tokenPath = ""
+	//get cluster details
+	if err := getClusterDetails(kubeInfo); err != nil {
+		return err
 	}
 
-	err := getAccessToken(tokenPath, kubeInfo)
+	switch userType {
+	case AUTH_CLUSTER_ADMIN, AUTH_USER:
+		userType = claims["rolesInfo"].(map[string]interface{})[kubeInfo.AimCluster].(map[string]interface{})["userType"].(string)
+		if err := getUserToken(userType, userAuthId, kubeInfo); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func getClusterDetails(kubeInfo *KubeInfo) error {
+	path := fmt.Sprintf("%v/%v", config.Env.VaultClusterPath, kubeInfo.AimCluster)
+	data, err := read(path)
 	if err != nil {
 		return err
 	}
 
+	kubeInfo.AimApiServer = data["clusterApiUrl"].(string)
+	kubeInfo.AimToken = data["clusterToken"].(string)
+
+	return nil
+}
+
+func getUserToken(userType string, userAuthId string, kubeInfo *KubeInfo) error {
+	path := fmt.Sprintf("%v/%v/%v", config.Env.VaultUserPath, userAuthId, kubeInfo.AimCluster)
+	if userType == AUTH_USER {
+		path = fmt.Sprintf("%v/%v", path, kubeInfo.AimNamespace)
+	}
+	fmt.Println("kubeInfo:", kubeInfo)
+	fmt.Println("path:", path)
+	data, err := read(path)
+	if err != nil {
+		return err
+	}
+
+	kubeInfo.AimToken = data["clusterToken"].(string)
 	return nil
 }

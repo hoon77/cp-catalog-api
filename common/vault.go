@@ -8,25 +8,21 @@ import (
 	"time"
 )
 
-func getAccessToken(path string, kubeInfo *KubeInfo) error {
+func read(path string) (map[string]interface{}, error) {
 	ctx := context.Background()
 	//get vault client
 	client, err := getVaultClient()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// read a secret
 	resp, err := client.Read(ctx, path)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	data := resp.Data["data"].(map[string]interface{})
-	kubeInfo.AimApiServer = data["clusterApiUrl"].(string)
-	kubeInfo.AimToken = data["clusterToken"].(string)
-
-	return nil
+	return resp.Data["data"].(map[string]interface{}), nil
 }
 
 func getVaultClient() (*vault.Client, error) {
