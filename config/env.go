@@ -25,14 +25,18 @@ type envConfigs struct {
 	ArtifactHubPackageDetail  string `mapstructure:"ARTIFACT_HUB_PACKAGE_DETAIL"`
 	ArtifactHubPackageValues  string `mapstructure:"ARTIFACT_HUB_PACKAGE_VALUES"`
 	ArtifactHubPackageLogoUrl string `mapstructure:"ARTIFACT_HUB_PACKAGE_LOGO_URL"`
+	VaultUrl                  string `mapstructure:"VAULT_URL"`
 	VaultRoleName             string `mapstructure:"VAULT_ROLE_NAME"`
 	VaultRoleId               string `mapstructure:"VAULT_ROLE_ID"`
 	VaultSecretId             string `mapstructure:"VAULT_SECRET_ID"`
+	VaultAppRolePath          string `mapstructure:"VAULT_APPROLE_PATH"`
+	VaultClusterPath          string `mapstructure:"VAULT_CLUSTER_PATH"`
+	VaultUserPath             string `mapstructure:"VAULT_USER_PATH"`
 }
 
 func loadEnvVariables() (config *envConfigs) {
 	viper.AddConfigPath(".")
-	viper.SetConfigName("app")
+	viper.SetConfigName("config")
 	viper.SetConfigType("env")
 
 	if err := viper.ReadInConfig(); err != nil {

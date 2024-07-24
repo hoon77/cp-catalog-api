@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/golang/glog"
 	"go-api/config"
 	"helm.sh/helm/v3/pkg/action"
@@ -16,14 +17,26 @@ var (
 	settings = cli.New()
 )
 
-type KubeInformation struct {
+type userKubeAuthInfo struct {
+	userName   string
+	userType   string
+	userAuthId string
+	rolesInfo  map[string]clusterInfo
+}
+
+type clusterInfo struct {
+	userType      string
+	namespaceList []string
+}
+
+type KubeInfo struct {
 	AimCluster   string
 	AimNamespace string
 	AimApiServer string
 	AimToken     string
 }
 
-func InitKubeInformation(c *fiber.Ctx) (*KubeInformation, error) {
+func InitKubeInfo(c *fiber.Ctx) (*KubeInfo, error) {
 	namespace := c.Params("namespace")
 	if strings.ToLower(namespace) == ALL_NAMESPACE {
 		if c.Route().Name != LIST_RELEASES {
@@ -33,19 +46,26 @@ func InitKubeInformation(c *fiber.Ctx) (*KubeInformation, error) {
 		namespace = ""
 	}
 
-	return &KubeInformation{
+	kubeInfo := &KubeInfo{
 		AimCluster:   c.Params("clusterId"),
 		AimNamespace: namespace,
-		AimApiServer: config.Env.K8sApiServer,
-		AimToken:     config.Env.K8sToken,
-	}, nil
-}
+	}
 
-func ActionConfigInit(c *fiber.Ctx) (*action.Configuration, error) {
-	kubeInfo, err := InitKubeInformation(c)
+	err := getUserKubeAuth(c, kubeInfo)
 	if err != nil {
 		return nil, err
 	}
+
+	return kubeInfo, nil
+}
+
+func ActionConfigInit(c *fiber.Ctx) (*action.Configuration, error) {
+	kubeInfo, err := InitKubeInfo(c)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("kubeInfo:", kubeInfo)
 	actionConfig := new(action.Configuration)
 
 	settings.KubeAPIServer = kubeInfo.AimApiServer
@@ -62,4 +82,24 @@ func ActionConfigInit(c *fiber.Ctx) (*action.Configuration, error) {
 	}
 
 	return actionConfig, nil
+}
+
+func getUserKubeAuth(c *fiber.Ctx, kubeInfo *KubeInfo) error {
+	var tokenPath string
+	claims := c.Locals("user").(*jwt.Token).Claims.(jwt.MapClaims)
+	userType := claims["userType"].(string)
+
+	switch userType {
+	case AUTH_SUPER_ADMIN:
+		tokenPath = fmt.Sprintf("%v%v", config.Env.VaultClusterPath, kubeInfo.AimCluster)
+	case AUTH_CLUSTER_ADMIN, AUTH_USER:
+		tokenPath = ""
+	}
+
+	err := getAccessToken(tokenPath, kubeInfo)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

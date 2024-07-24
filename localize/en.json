@@ -34,5 +34,8 @@
   "RELEASE_ALREADY_EXISTS" :  "Release already exists.",
   "HUB_PACKAGE_LIMIT_ILLEGAL_ARGUMENT" : "invalid limit (0 < l <= 60)",
   "cannot re-use a name that is still in use" : "Cannot re-use a name that is still in use",
-  "TOKEN_EXPIRED" : "Access Token has Expired"
+  "TOKEN_FAILED" : "Invalid JWT",
+  "TOKEN_EXPIRED" : "Access Token has Expired",
+  "MISSING_OR_MALFORMED_JWT" : "missing or malformed JWT"
+
 }

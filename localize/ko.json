@@ -34,5 +34,7 @@
   "RELEASE_ALREADY_EXISTS" :  "Release가 이미 존재합니다.",
   "HUB_PACKAGE_LIMIT_ILLEGAL_ARGUMENT" : "limit(한 페이지에 가져올 리소스 최대 수)이 올바르지 않습니다. (0 < limit <= 60)",
   "cannot re-use a name that is still in use" : "해당 Release 명이 이미 존재합니다.",
-  "TOKEN_EXPIRED" : "Access Token이 만료되었습니다."
+  "TOKEN_FAILED" : "Access Token이 올바르지 않습니다.",
+  "TOKEN_EXPIRED" : "Access Token이 만료되었습니다.",
+  "MISSING_OR_MALFORMED_JWT" : "누락 또는 잘못된 형식의 Access Token입니다."
 }

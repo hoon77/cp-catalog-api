@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/contrib/fiberi18n/v2"
 	jwtware "github.com/gofiber/contrib/jwt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/golang-jwt/jwt/v5"
@@ -24,14 +25,7 @@ func FiberMiddleware(a *fiber.App) {
 		jwtware.New(jwtware.Config{
 			KeyFunc: customKeyFunc(),
 			ErrorHandler: func(c *fiber.Ctx, err error) error {
-				switch {
-				case errors.Is(err, jwtware.ErrJWTMissingOrMalformed):
-					return common.RespErrStatus(c, fiber.StatusBadRequest, fmt.Errorf(common.MISSING_OR_MALFORMED_JWT))
-				case errors.Is(err, jwt.ErrTokenExpired):
-					return common.RespErrStatus(c, fiber.StatusUnauthorized, fmt.Errorf(common.TOKEN_EXPIRED))
-				}
-
-				return err
+				return customErrorHandler(c, err)
 			},
 		}),
 	)
@@ -54,7 +48,17 @@ func customKeyFunc() jwt.Keyfunc {
 		if t.Method.Alg() != jwtware.HS512 {
 			return nil, fmt.Errorf("Unexpected jwt signing method=%v", t.Header["alg"])
 		}
-
 		return []byte(config.Env.JwtSecret), nil
 	}
+}
+
+func customErrorHandler(c *fiber.Ctx, err error) error {
+	log.Errorf("JWT ErrorHandler:: %v", err.Error())
+	switch {
+	case errors.Is(err, jwtware.ErrJWTMissingOrMalformed):
+		return common.RespErrStatus(c, fiber.StatusBadRequest, fmt.Errorf(common.MISSING_OR_MALFORMED_JWT))
+	case errors.Is(err, jwt.ErrTokenExpired):
+		return common.RespErrStatus(c, fiber.StatusUnauthorized, fmt.Errorf(common.TOKEN_EXPIRED))
+	}
+	return common.RespErrStatus(c, fiber.StatusUnauthorized, fmt.Errorf(common.TOKEN_FAILED))
 }
