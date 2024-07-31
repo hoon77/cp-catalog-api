@@ -6,7 +6,7 @@
   "OFFSET_VAL_INVALID" :  "offset(목록 시작지점) 값이 올바르지 않습니다.",
   "OFFSET_ILLEGAL_ARGUMENT" : "offset(목록 시작지점)은 반드시 0 이상이여아 합니다. offset >=0",
   "OFFSET_REQUIRES_LIMIT_ILLEGAL_ARGUMENT" : "offset(목록 시작지점) 사용 시 limit(한 페이지에 가져올 리소스 최대 수) 값이 필요합니다.",
-  "FAILED_TO_READ_CLUSTER_DATA": "클러스터 정보를 가져오는 데 실패했습니다.",
+  "FAILED_TO_READ_CLUSTER_INFO": "클러스터 정보를 가져오는 데 실패했습니다.",
   "FAILED_TO_PARSE_VALUES": "values 구문 분석에 실패했습니다. 올바른 values 형식이 필요합니다.",
   "NAMESPACE_ALL_NOT_ALLOWED": "Namespace 'all'은 허용하지 않습니다.",
   "REPO_NAME_URL_REQUIRED" :"Repository 명과 URL 값 입력이 필요합니다.",

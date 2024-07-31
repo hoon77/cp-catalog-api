@@ -43,7 +43,7 @@ func getVaultClient() (*vault.Client, error) {
 			RoleId:   config.Env.VaultRoleId,
 			SecretId: config.Env.VaultSecretId,
 		},
-		vault.WithMountPath(config.Env.VaultAppRolePath),
+		vault.WithMountPath(""),
 	)
 	if err != nil {
 		return nil, err

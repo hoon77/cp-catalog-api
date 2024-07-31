@@ -28,10 +28,6 @@ func init() {
 // @BasePath /
 func main() {
 	log.Info("Hello, Helm Rest API!")
-	log.Info("TEST: VAULT_ROLE_NAME:", config.Env.VaultRoleName)
-	log.Info("TEST: VAULT_ROLE_ID:", config.Env.VaultRoleId)
-	log.Info("TEST: VAULT_SECRET_ID:", config.Env.VaultSecretId)
-
 	makeRepoConfig()
 	app := fiber.New()
 	middleware.SetupLocalize(app)

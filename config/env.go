@@ -14,8 +14,6 @@ func InitEnvConfigs() {
 type envConfigs struct {
 	ServerPort                string `mapstructure:"SERVER_PORT"`
 	JwtSecret                 string `mapstructure:"JWT_SECRET"`
-	K8sApiServer              string `mapstructure:"K8S_API_SERVER"`
-	K8sToken                  string `mapstructure:"K8S_TOKEN"`
 	HelmRepoConfig            string `mapstructure:"HELM_REPO_CONFIG"`
 	HelmRepoCache             string `mapstructure:"HELM_REPO_CACHE"`
 	HelmRepoCA                string `mapstructure:"HELM_REPO_CA"`
@@ -29,7 +27,6 @@ type envConfigs struct {
 	VaultRoleName             string `mapstructure:"VAULT_ROLE_NAME"`
 	VaultRoleId               string `mapstructure:"VAULT_ROLE_ID"`
 	VaultSecretId             string `mapstructure:"VAULT_SECRET_ID"`
-	VaultAppRolePath          string `mapstructure:"VAULT_APPROLE_PATH"`
 	VaultClusterPath          string `mapstructure:"VAULT_CLUSTER_PATH"`
 	VaultUserPath             string `mapstructure:"VAULT_USER_PATH"`
 }

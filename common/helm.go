@@ -17,18 +17,6 @@ var (
 	settings = cli.New()
 )
 
-type userKubeAuthInfo struct {
-	userName   string
-	userType   string
-	userAuthId string
-	rolesInfo  map[string]clusterInfo
-}
-
-type clusterInfo struct {
-	userType      string
-	namespaceList []string
-}
-
 type KubeInfo struct {
 	AimCluster   string
 	AimNamespace string
@@ -65,7 +53,7 @@ func ActionConfigInit(c *fiber.Ctx) (*action.Configuration, error) {
 		return nil, err
 	}
 
-	fmt.Println("kubeInfo:", kubeInfo)
+	fmt.Println("action :: kubeInfo:", kubeInfo)
 	actionConfig := new(action.Configuration)
 
 	settings.KubeAPIServer = kubeInfo.AimApiServer
@@ -86,34 +74,49 @@ func ActionConfigInit(c *fiber.Ctx) (*action.Configuration, error) {
 
 func getKubeToken(c *fiber.Ctx, kubeInfo *KubeInfo) error {
 	claims := c.Locals("user").(*jwt.Token).Claims.(jwt.MapClaims)
-	userType := claims["userType"].(string)
+	userType := claims["userType"].(string) // SUPER_ADMIN, CLUSTER_ADMIN, USER
 	userAuthId := claims["userAuthId"].(string)
 
-	//get cluster details
-	if err := getClusterDetails(kubeInfo); err != nil {
-		return err
-	}
-
 	switch userType {
+	// CLUSTER_ADMIN OR USER
 	case AUTH_CLUSTER_ADMIN, AUTH_USER:
-		userType = claims["rolesInfo"].(map[string]interface{})[kubeInfo.AimCluster].(map[string]interface{})["userType"].(string)
+		clusterInfo := claims["rolesInfo"].(map[string]interface{})[kubeInfo.AimCluster]
+		if clusterInfo == nil {
+			log.Error("clusterInfo == nil :: There is no mapping info with that cluster in the token...")
+			return fmt.Errorf(FAILED_TO_READ_CLUSTER_INFO)
+		}
+
+		userType = clusterInfo.(map[string]interface{})["userType"].(string)
 		if err := getUserToken(userType, userAuthId, kubeInfo); err != nil {
 			return err
 		}
 	}
 
-	return nil
-}
-
-func getClusterDetails(kubeInfo *KubeInfo) error {
-	path := fmt.Sprintf("%v/%v", config.Env.VaultClusterPath, kubeInfo.AimCluster)
-	data, err := read(path)
-	if err != nil {
+	//get cluster detailS
+	if err := getClusterDetails(userType, kubeInfo); err != nil {
 		return err
 	}
 
+	return nil
+}
+
+func getClusterDetails(userType string, kubeInfo *KubeInfo) error {
+	path := fmt.Sprintf("%v/%v", config.Env.VaultClusterPath, kubeInfo.AimCluster)
+
+	fmt.Println("getClusterDetails: path:", path)
+
+	data, err := read(path)
+	if err != nil {
+		log.Errorf("getClusterDetails :: read :: () %v", err)
+		return fmt.Errorf(FAILED_TO_READ_CLUSTER_INFO)
+	}
+
 	kubeInfo.AimApiServer = data["clusterApiUrl"].(string)
-	kubeInfo.AimToken = data["clusterToken"].(string)
+
+	if userType == AUTH_SUPER_ADMIN {
+		kubeInfo.AimToken = data["clusterToken"].(string)
+
+	}
 
 	return nil
 }
@@ -123,11 +126,13 @@ func getUserToken(userType string, userAuthId string, kubeInfo *KubeInfo) error 
 	if userType == AUTH_USER {
 		path = fmt.Sprintf("%v/%v", path, kubeInfo.AimNamespace)
 	}
-	fmt.Println("kubeInfo:", kubeInfo)
-	fmt.Println("path:", path)
+
+	fmt.Println("getUserToken: path:", path)
+
 	data, err := read(path)
 	if err != nil {
-		return err
+		log.Errorf("getUserToken :: read :: () %v", err)
+		return fmt.Errorf(FAILED_TO_READ_CLUSTER_INFO)
 	}
 
 	kubeInfo.AimToken = data["clusterToken"].(string)

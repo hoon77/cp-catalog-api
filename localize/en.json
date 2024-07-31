@@ -6,7 +6,7 @@
   "OFFSET_VAL_INVALID" :  "The offset value is invalid",
   "OFFSET_ILLEGAL_ARGUMENT" : "Offset must be at least zero. offset >=0",
   "OFFSET_REQUIRES_LIMIT_ILLEGAL_ARGUMENT" : "When using offset, a limit value is required.",
-  "FAILED_TO_READ_CLUSTER_DATA": "Failed to read cluster data",
+  "FAILED_TO_READ_CLUSTER_INFO": "Failed to read cluster information",
   "FAILED_TO_PARSE_VALUES": "Failed to parse values. Check the values format again",
   "NAMESPACE_ALL_NOT_ALLOWED": "Namespace 'all' is not allowed.",
   "REPO_NAME_URL_REQUIRED" :"Name and URL are required to add the repository",
