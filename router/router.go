@@ -2,10 +2,26 @@ package router
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/swagger"
 	"go-api/common"
 	"go-api/handler"
 )
 
+func AccessibleRoute(app *fiber.App) {
+	// swagger
+	route := app.Group("/swagger")
+	{
+		route.Get("*", swagger.HandlerDefault)
+	}
+
+	// health check
+	health := app.Group("/actuator/health")
+	{
+		health.Get("", handler.Health)
+		health.Get("/liveness", handler.HealthCheck)
+		health.Get("/readiness", handler.HealthCheck)
+	}
+}
 func APIRoutes(app *fiber.App) {
 	api := app.Group("/api")
 

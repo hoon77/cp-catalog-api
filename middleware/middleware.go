@@ -17,6 +17,13 @@ import (
 
 func FiberMiddleware(a *fiber.App) {
 	a.Use(
+		// Add i18n
+		fiberi18n.New(&fiberi18n.Config{
+			RootPath:         "./localize",
+			AcceptLanguages:  []language.Tag{language.English, language.Korean},
+			DefaultLanguage:  language.English,
+			FormatBundleFile: "json",
+		}),
 		// Add CORS to each route.
 		cors.New(),
 		// Add simple logger.
@@ -27,17 +34,6 @@ func FiberMiddleware(a *fiber.App) {
 			ErrorHandler: func(c *fiber.Ctx, err error) error {
 				return customErrorHandler(c, err)
 			},
-		}),
-	)
-}
-
-func SetupLocalize(app *fiber.App) {
-	app.Use(
-		fiberi18n.New(&fiberi18n.Config{
-			RootPath:         "./localize",
-			AcceptLanguages:  []language.Tag{language.English, language.Korean},
-			DefaultLanguage:  language.English,
-			FormatBundleFile: "json",
 		}),
 	)
 }
