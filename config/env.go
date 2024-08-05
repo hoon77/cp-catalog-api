@@ -3,12 +3,15 @@ package config
 import (
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/spf13/viper"
+	"helm.sh/helm/v3/pkg/repo"
+	"os"
 )
 
 var Env *envConfigs
 
 func InitEnvConfigs() {
 	Env = loadEnvVariables()
+	makeRepoConfig()
 }
 
 type envConfigs struct {
@@ -43,4 +46,26 @@ func loadEnvVariables() (config *envConfigs) {
 		log.Fatal(err)
 	}
 	return
+}
+
+func makeRepoConfig() {
+	// Check repositories.yaml exists
+	if _, err := os.Stat(Env.HelmRepoConfig); os.IsNotExist(err) {
+		log.Infof("[FILE NOT FOUND] PATH:: %v...", Env.HelmRepoConfig)
+		repositories := repo.NewFile()
+		log.Infof("[CREATING NEW FILE] PATH:: %v...", Env.HelmRepoConfig)
+		if err = repositories.WriteFile(Env.HelmRepoConfig, 0600); err != nil {
+			log.Errorf("[FAILED TO CREATE FILE] PATH:: %v, ERR:: %v", Env.HelmRepoConfig, err)
+		}
+	}
+
+	// Check repository cache path exists
+	if err := os.MkdirAll(Env.HelmRepoCache, os.ModePerm); err != nil {
+		log.Errorf("[FAILED TO CREATE CACHE DIR] PATH:: %v, ERR:: %v", Env.HelmRepoCache, err)
+	}
+
+	// Check repository ca file path exists
+	if err := os.MkdirAll(Env.HelmRepoCA, os.ModePerm); err != nil {
+		log.Errorf("[FAILED TO CREATE CERT DIR] PATH:: %v, ERR:: %v", Env.HelmRepoCA, err)
+	}
 }
