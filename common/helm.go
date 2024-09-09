@@ -53,9 +53,7 @@ func ActionConfigInit(c *fiber.Ctx) (*action.Configuration, error) {
 		return nil, err
 	}
 
-	fmt.Println("action :: kubeInfo:", kubeInfo)
 	actionConfig := new(action.Configuration)
-
 	settings.KubeAPIServer = kubeInfo.AimApiServer
 	settings.KubeToken = kubeInfo.AimToken
 	settings.KubeInsecureSkipTLSVerify = true
@@ -103,8 +101,6 @@ func getKubeToken(c *fiber.Ctx, kubeInfo *KubeInfo) error {
 func getClusterDetails(userType string, kubeInfo *KubeInfo) error {
 	path := fmt.Sprintf("%v/%v", config.Env.VaultClusterPath, kubeInfo.AimCluster)
 
-	fmt.Println("getClusterDetails: path:", path)
-
 	data, err := read(path)
 	if err != nil {
 		log.Errorf("getClusterDetails :: read :: () %v", err)
@@ -126,8 +122,6 @@ func getUserToken(userType string, userAuthId string, kubeInfo *KubeInfo) error 
 	if userType == AUTH_USER {
 		path = fmt.Sprintf("%v/%v", path, kubeInfo.AimNamespace)
 	}
-
-	fmt.Println("getUserToken: path:", path)
 
 	data, err := read(path)
 	if err != nil {
