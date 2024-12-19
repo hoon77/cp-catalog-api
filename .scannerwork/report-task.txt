@@ -1,6 +1,0 @@
-projectKey=catalog-api
-serverUrl=http://sonarqube.133.186.208.245.nip.io
-serverVersion=10.7.0.96327
-dashboardUrl=http://sonarqube.133.186.208.245.nip.io/dashboard?id=catalog-api
-ceTaskId=d6d5ea18-edcf-465e-9715-632a6665bd85
-ceTaskUrl=http://sonarqube.133.186.208.245.nip.io/api/ce/task?id=d6d5ea18-edcf-465e-9715-632a6665bd85
