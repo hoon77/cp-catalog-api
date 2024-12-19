@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/valyala/fasthttp"
@@ -103,4 +104,22 @@ func TestUpdateRepo(t *testing.T) {
 	json.Unmarshal(body, &result)
 	assert.Nil(t, err)
 	assert.Equal(t, 200, result.HttpStatusCode)
+}
+
+func Test_syncRepoLock(t *testing.T) {
+	type args struct {
+		repoFile string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantErr assert.ErrorAssertionFunc
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.wantErr(t, syncRepoLock(tt.args.repoFile), fmt.Sprintf("syncRepoLock(%v)", tt.args.repoFile))
+		})
+	}
 }
