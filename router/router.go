@@ -41,7 +41,7 @@ func APIRoutes(app *fiber.App) {
 		// helm show chart
 		repositories.Get("/:repositories/charts/:charts/info", handler.GetChartInfo)
 		// clear cache
-		repositories.Delete("/cache/clear", handler.ClearRepoCache)
+		//		repositories.Delete("/cache/clear", handler.ClearRepoCache)
 	}
 
 	// artifactHub

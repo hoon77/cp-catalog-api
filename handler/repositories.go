@@ -2,8 +2,6 @@ package handler
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/pem"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -13,14 +11,10 @@ import (
 	"go-api/config"
 	"helm.sh/helm/v3/cmd/helm/search"
 	"helm.sh/helm/v3/pkg/getter"
-	"helm.sh/helm/v3/pkg/helmpath"
 	"helm.sh/helm/v3/pkg/repo"
-	"net/http"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -43,7 +37,7 @@ type addRepositoryElement struct {
 	CaBase64 string `json:"ca_base64"`
 }
 
-func addRepoVaildCheck(newRepo *addRepositoryElement) error {
+/*func addRepoVaildCheck(newRepo *addRepositoryElement) error {
 	if newRepo.Name == "" || newRepo.URL == "" {
 		return fmt.Errorf(common.REPO_NAME_URL_REQUIRED)
 	}
@@ -68,7 +62,7 @@ func addRepoVaildCheck(newRepo *addRepositoryElement) error {
 	}
 	return nil
 }
-
+*/
 // AddRepo
 // @Summary Add Repository
 // @Tags Repository
@@ -81,15 +75,15 @@ func AddRepo(c *fiber.Ctx) error {
 	if err := c.BodyParser(newRepo); err != nil {
 		return common.RespErr(c, err)
 	}
-	if err := addRepoVaildCheck(newRepo); err != nil {
-		return common.RespErr(c, err)
-	}
-
+	/*	if err := addRepoVaildCheck(newRepo); err != nil {
+			return common.RespErr(c, err)
+		}
+	*/
 	log.Infof("Add repo :: name: %s, url: %s", newRepo.Name, newRepo.URL)
-	if err := getRepoConnectionStatus(newRepo.URL); err != nil {
-		return common.RespErr(c, err)
-	}
-
+	/*	if err := getRepoConnectionStatus(newRepo.URL); err != nil {
+			return common.RespErr(c, err)
+		}
+	*/
 	// Ensure the file directory exists as it is required for file locking
 	err := os.MkdirAll(filepath.Dir(repoFile), os.ModePerm)
 	if err != nil && !os.IsExist(err) {
@@ -132,9 +126,9 @@ func AddRepo(c *fiber.Ctx) error {
 		if err := os.MkdirAll(config.Env.HelmRepoCA, os.ModePerm); err != nil && !os.IsExist(err) {
 			return common.RespErr(c, err)
 		}
-		if err := saveRepoCaFile(caFilePath, newRepo.CaBase64); err != nil {
+		/*	if err := saveRepoCaFile(caFilePath, newRepo.CaBase64); err != nil {
 			return common.RespErr(c, err)
-		}
+		}*/
 		repoEntry.CAFile = caFilePath
 	}
 
@@ -222,10 +216,10 @@ func RemoveRepo(c *fiber.Ctx) error {
 		return common.RespErr(c, err)
 	}
 
-	if err := removeRepoCache(settings.RepositoryCache, repoName); err != nil {
-		return common.RespErr(c, err)
-	}
-
+	/*	if err := removeRepoCache(settings.RepositoryCache, repoName); err != nil {
+			return common.RespErr(c, err)
+		}
+	*/
 	// delete repo ca.crt
 	_ = RemoveFile(removeRepo.CAFile)
 
@@ -250,7 +244,7 @@ func UpdateRepo(c *fiber.Ctx) error {
 
 	updateRepo := repoFile.Get(repoName)
 	log.Infof("Update repo (name: %s, url: %s)", updateRepo.Name, updateRepo.URL)
-	err = updateChart(updateRepo)
+	//err = updateChart(updateRepo)
 	if err != nil {
 		log.Errorf("Failed to update repo.. %s", err.Error())
 		return common.RespErr(c, fmt.Errorf(common.REPO_UNABLE_UPDATE))
@@ -323,147 +317,4 @@ func syncRepoLock(repoFile string) error {
 	}
 
 	return nil
-}
-
-func updateChart(repoEntry *repo.Entry) error {
-	if err := getRepoConnectionStatus(repoEntry.URL); err != nil {
-		return err
-	}
-
-	chartRepository, err := repo.NewChartRepository(repoEntry, getter.All(settings))
-	if err != nil {
-		return err
-	}
-
-	// set cache path
-	if settings.RepositoryCache != "" {
-		chartRepository.CachePath = settings.RepositoryCache
-	}
-	if _, err = chartRepository.DownloadIndexFile(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func removeRepoCache(root, name string) error {
-	idx := filepath.Join(root, helmpath.CacheChartsFile(name))
-	if _, err := os.Stat(idx); err == nil {
-		os.Remove(idx)
-	}
-
-	idx = filepath.Join(root, helmpath.CacheIndexFile(name))
-	if _, err := os.Stat(idx); os.IsNotExist(err) {
-		return nil
-	} else if err != nil {
-		return errors.Wrapf(err, "can't remove index file %s", idx)
-	}
-	return os.Remove(idx)
-}
-
-func saveRepoCaFile(caFilePath string, base64CA string) error {
-	if FileExists(caFilePath) {
-		return fmt.Errorf(common.REPO_CA_ALREADY_EXISTS)
-	}
-	// decode base64
-	pemCA, err := base64.StdEncoding.DecodeString(base64CA)
-	if err != nil {
-		return fmt.Errorf(common.REPO_CA_INVALID)
-	}
-
-	// decode PEM block
-	block, _ := pem.Decode(pemCA)
-	if block == nil {
-		return fmt.Errorf(common.REPO_CA_INVALID)
-	}
-
-	err = os.WriteFile(caFilePath, pemCA, 0644)
-	if err != nil {
-		return fmt.Errorf(common.REPO_CA_FAILED_SAVE)
-	}
-
-	return nil
-}
-
-func getRepoConnectionStatus(url string) error {
-	// default 5sec
-	client := http.Client{
-		Timeout: 5 * time.Second,
-	}
-	resp, err := client.Get(url)
-	if err != nil {
-		if os.IsTimeout(err) {
-			// A timeout error occurred
-			return fmt.Errorf(common.REPO_CONNECT_TIMEOUT)
-		}
-	}
-
-	defer func() {
-		if resp != nil {
-			err := resp.Body.Close()
-			if err != nil {
-				log.Error(err)
-			}
-		}
-	}()
-
-	return nil
-}
-
-// ClearRepoCache
-// @Summary Clear Repo Cache
-// @Tags Repository
-// @Accept json
-// @Produce json
-// @Router /api/repositories/cache/clear [DELETE]
-func ClearRepoCache(c *fiber.Ctx) error {
-	// Load repo config
-	repoFile, err := repo.LoadFile(settings.RepositoryConfig)
-	switch {
-	case isNotExist(err):
-		return common.RespErr(c, fmt.Errorf(common.REPO_NO_CONFIGURED))
-	case err != nil:
-		return common.RespErr(c, fmt.Errorf(common.REPO_FAILED_LOADING_FILE))
-	}
-	// Remove all files in these directories.
-	path := filepath.Join(config.Env.HelmRepoCache, "*")
-	log.Infof("Clear Cache Path:: %s", path)
-	err = RemoveGlob(path)
-	if err != nil {
-		return common.RespErr(c, err)
-	}
-
-	// Update repository configurations
-	repoFailList := UpdateRepoAll(repoFile)
-	if len(repoFailList) > 0 {
-		log.Infof("Failed to update the following repositories: %v", repoFailList)
-	} else {
-		repoFailList = make([]string, 0)
-	}
-
-	return common.RespOK(c, repoFailList)
-}
-
-func UpdateRepoAll(repoFile *repo.File) []string {
-	var repoFailList []string
-	var wg sync.WaitGroup
-	for _, re := range repoFile.Repositories {
-		wg.Add(1)
-		go func(re *repo.Entry) {
-			defer wg.Done()
-			log.Infof("Update repo (name: %s, url: %s)", re.Name, re.URL)
-			err := updateChart(re)
-			if err != nil {
-				log.Errorf("Failed to update the repo (name: %s, url: %s, err: %s)", re.Name, re.URL, err)
-				repoFailList = append(repoFailList, re.Name)
-			}
-		}(re)
-	}
-	wg.Wait()
-
-	return repoFailList
-}
-
-func isNotExist(err error) bool {
-	return os.IsNotExist(errors.Cause(err))
 }

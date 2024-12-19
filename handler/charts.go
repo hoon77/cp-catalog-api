@@ -8,13 +8,11 @@ import (
 	"go-api/common"
 	"helm.sh/helm/v3/cmd/helm/search"
 	"helm.sh/helm/v3/pkg/action"
-	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/chartutil"
 	"helm.sh/helm/v3/pkg/helmpath"
 	"helm.sh/helm/v3/pkg/repo"
 	"path/filepath"
-	"strings"
 )
 
 // searchMaxScore suggests that any score higher than this is not considered a match.
@@ -62,7 +60,7 @@ func GetChartVersions(c *fiber.Ctx) error {
 
 	if len(repoName) < 1 {
 		// search in all repos
-		index, err = buildSearchIndexAll()
+		//	index, err = buildSearchIndexAll()
 		keyword = fmt.Sprintf("/%s\v", charts)
 	} else {
 		index, err = buildSearchIndex(repoName)
@@ -159,7 +157,7 @@ func GetChartInfo(c *fiber.Ctx) error {
 		return common.RespOK(c, values)
 	}
 	if client.OutputFormat == action.ShowReadme {
-		return common.RespOK(c, string(findReadme(chrt.Files).Data))
+		return common.RespOK(c, chrt.Files)
 	}
 	if client.OutputFormat == action.ShowAll {
 		values := make([]*file, 0, len(chrt.Raw))
@@ -175,20 +173,6 @@ func GetChartInfo(c *fiber.Ctx) error {
 	return common.RespOK(c, nil)
 }
 
-func findReadme(files []*chart.File) (file *chart.File) {
-	for _, file := range files {
-		for _, n := range readmeFileNames {
-			if file == nil {
-				continue
-			}
-			if strings.EqualFold(file.Name, n) {
-				return file
-			}
-		}
-	}
-	return nil
-}
-
 func buildSearchIndex(repoName string) (*search.Index, error) {
 	index := search.NewIndex()
 	path := filepath.Join(settings.RepositoryCache, helmpath.CacheIndexFile(repoName))
@@ -198,31 +182,6 @@ func buildSearchIndex(repoName string) (*search.Index, error) {
 	}
 
 	index.AddRepo(repoName, indexFile, true)
-	return index, nil
-}
-
-func buildSearchIndexAll() (*search.Index, error) {
-	repos, err := repo.LoadFile(settings.RepositoryConfig)
-	switch {
-	case isNotExist(err):
-		return nil, fmt.Errorf(common.REPO_NO_CONFIGURED)
-	case err != nil:
-		return nil, fmt.Errorf(common.REPO_FAILED_LOADING_FILE)
-	case len(repos.Repositories) == 0:
-		return nil, fmt.Errorf(common.REPO_NO_CONFIGURED)
-	}
-
-	index := search.NewIndex()
-
-	for _, re := range repos.Repositories {
-		repoName := re.Name
-		f := filepath.Join(settings.RepositoryCache, helmpath.CacheIndexFile(repoName))
-		indexFile, err := repo.LoadIndexFile(f)
-		if err != nil {
-			continue
-		}
-		index.AddRepo(repoName, indexFile, true)
-	}
 	return index, nil
 }
 
