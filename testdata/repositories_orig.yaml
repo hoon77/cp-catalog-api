@@ -6,3 +6,6 @@ repositories:
   - name: incubator
     url: https://example.com/incubator
     cache: incubator-index.yaml
+  - name: grafana
+    url: https://grafana.github.io/helm-charts
+    cache: grafana-index.yaml

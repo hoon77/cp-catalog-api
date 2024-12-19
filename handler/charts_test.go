@@ -15,17 +15,8 @@ import (
 func TestGetChartInfo(t *testing.T) {
 	setTestConfig()
 	var result common.ResultStatus
-	mcPostBody := map[string]interface{}{
-		"name": "bitnami",
-		"url":  "https://charts.bitnami.com/bitnami",
-	}
-	postBody, _ := json.Marshal(mcPostBody)
-	app.Post("/api/repositories", AddRepo)
-	req := httptest.NewRequest("POST", "/api/repositories", bytes.NewReader(postBody))
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
 	app.Get("/api/repositories/:repositories/charts/:charts/info", GetChartInfo)
-	req = httptest.NewRequest("GET", "/api/repositories/bitnami/charts/nginx/info", nil)
+	req := httptest.NewRequest("GET", "/api/repositories/grafana/charts/grafana/info", nil)
 
 	res, _ := app.Test(req, -1)
 	body, _ := io.ReadAll(res.Body)
@@ -35,17 +26,9 @@ func TestGetChartInfo(t *testing.T) {
 func TestGetChartInfoValues(t *testing.T) {
 	setTestConfig()
 	var result common.ResultStatus
-	mcPostBody := map[string]interface{}{
-		"name": "bitnami",
-		"url":  "https://charts.bitnami.com/bitnami",
-	}
-	postBody, _ := json.Marshal(mcPostBody)
-	app.Post("/api/repositories", AddRepo)
-	req := httptest.NewRequest("POST", "/api/repositories", bytes.NewReader(postBody))
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
 	app.Get("/api/repositories/:repositories/charts/:charts/info", GetChartInfo)
-	req = httptest.NewRequest("GET", "/api/repositories/bitnami/charts/nginx/info?info=values", nil)
+	req := httptest.NewRequest("GET", "/api/repositories/grafana/charts/grafana/info?info=values", nil)
 
 	res, _ := app.Test(req, -1)
 	body, _ := io.ReadAll(res.Body)
@@ -56,17 +39,8 @@ func TestGetChartInfoValues(t *testing.T) {
 func TestGetChartInfoInfoReadme(t *testing.T) {
 	setTestConfig()
 	var result common.ResultStatus
-	mcPostBody := map[string]interface{}{
-		"name": "bitnami",
-		"url":  "https://charts.bitnami.com/bitnami",
-	}
-	postBody, _ := json.Marshal(mcPostBody)
-	app.Post("/api/repositories", AddRepo)
-	req := httptest.NewRequest("POST", "/api/repositories", bytes.NewReader(postBody))
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
-
 	app.Get("/api/repositories/:repositories/charts/:charts/info", GetChartInfo)
-	req = httptest.NewRequest("GET", "/api/repositories/bitnami/charts/nginx/info?info=readme", nil)
+	req := httptest.NewRequest("GET", "/api/repositories/grafana/charts/grafana/info?info=readme", nil)
 
 	res, _ := app.Test(req, -1)
 	body, _ := io.ReadAll(res.Body)
@@ -77,17 +51,9 @@ func TestGetChartInfoInfoReadme(t *testing.T) {
 func TestGetChartInfoInfoChart(t *testing.T) {
 	setTestConfig()
 	var result common.ResultStatus
-	mcPostBody := map[string]interface{}{
-		"name": "bitnami",
-		"url":  "https://charts.bitnami.com/bitnami",
-	}
-	postBody, _ := json.Marshal(mcPostBody)
-	app.Post("/api/repositories", AddRepo)
-	req := httptest.NewRequest("POST", "/api/repositories", bytes.NewReader(postBody))
-	req.Header.Set("Content-Type", "application/json; charset=UTF-8")
 
 	app.Get("/api/repositories/:repositories/charts/:charts/info", GetChartInfo)
-	req = httptest.NewRequest("GET", "/api/repositories/bitnami/charts/nginx/info?info=chart", nil)
+	req := httptest.NewRequest("GET", "/api/repositories/grafana/charts/grafana/info?info=chart", nil)
 
 	res, _ := app.Test(req, -1)
 	body, _ := io.ReadAll(res.Body)
